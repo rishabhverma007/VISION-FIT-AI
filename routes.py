@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify, session
+from flask import render_template, request, redirect, url_for, flash, jsonify, session, Response, stream_with_context
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 import os
@@ -20,9 +20,20 @@ except ImportError:
 
 # Import db from extensions to avoid circular imports
 from extensions import db
-from models import User, FoodLog, Workout
+from models import User, Workout
 import gemini
 from pose_detection import PoseAnalyzer
+from yoga_service import YogaService
+
+from yoga_service import YogaService
+from diet_service import DietService
+from google_fit_service import GoogleFitService
+import voice_service as voice_svc
+
+# Initialize services
+yoga_service = YogaService()
+diet_service = DietService()
+google_fit_service = GoogleFitService()
 
 
 # Global app variable that will be set by the main app
@@ -107,8 +118,7 @@ def register_routes(flask_app):
     @app.route('/dashboard')
     @login_required
     def dashboard():
-        # Get user's recent food logs
-        recent_food_logs = FoodLog.query.filter_by(user_id=current_user.id).order_by(FoodLog.logged_at.desc()).limit(5).all()
+        # Recent food logs removed
         
         # Calculate workout statistics
         workouts = Workout.query.filter_by(user_id=current_user.id).all()
@@ -148,8 +158,7 @@ def register_routes(flask_app):
                     if i < streak:
                         break
         
-        return render_template('dashboard.html', 
-                              recent_food_logs=recent_food_logs,
+        return render_template('dashboard.html',
                               total_workouts=total_workouts,
                               total_calories_burned=total_calories_burned,
                               avg_duration=avg_duration,
@@ -191,9 +200,10 @@ def register_routes(flask_app):
                 fitness_level = request.form.get('fitness_level')
                 equipment = request.form.get('equipment')
                 goals = request.form.get('goals')
+                limitations = request.form.get('limitations')
 
                 # Get user context
-                user_context = f"Fitness level: {fitness_level}, Equipment: {equipment}, Goals: {goals}"
+                user_context = f"Fitness level: {fitness_level}, Equipment: {equipment}, Goals: {goals}, Limitations: {limitations}"
 
                 # Get AI response for workout plan
                 plan = gemini.get_workout_plan(user_context)
@@ -214,130 +224,11 @@ def register_routes(flask_app):
 
 
 
-    @app.route('/food-analyzer', methods=['GET', 'POST'])
-    @login_required
-    def food_analyzer():
-        if request.method == 'POST':
-            if 'food_image' not in request.files:
-                flash('No image uploaded')
-                return redirect(request.url)
-
-            file = request.files['food_image']
-            if file.filename == '':
-                flash('No image selected')
-                return redirect(request.url)
-
-            if file:
-                try:
-                    # Read image data
-                    image_data = file.read()
-
-                    # Analyze using AI
-                    result = gemini.analyze_food_image(image_data)
-
-                    if result['success']:
-                        # Parse the analysis result
-                        analysis_text = result['analysis']
-
-                        # Extract calories from analysis text
-                        import re
-                        calorie_patterns = [
-                            r'total.*?(\d+).*?calorie',
-                            r'(\d+).*?total.*?calorie',
-                            r'calories?[:\s]*(\d+)',
-                            r'(\d+)[- ]*(\d+)?\s*calorie',
-                            r'approximately?\s*(\d+)'
-                        ]
-
-                        estimated_calories = 0
-                        for pattern in calorie_patterns:
-                            calorie_match = re.search(pattern, analysis_text.lower())
-                            if calorie_match:
-                                estimated_calories = int(calorie_match.group(1))
-                                break
-
-                        # If no calories found, provide a default estimate
-                        if estimated_calories == 0:
-                            estimated_calories = 250  # Default reasonable estimate
-
-                        # Save food log
-                        meal_type = request.form.get('meal_type', 'snack')
-                        food_log = FoodLog(
-                            user_id=current_user.id,
-                            food_items=analysis_text,
-                            total_calories=estimated_calories,
-                            meal_type=meal_type
-                        )
-                        db.session.add(food_log)
-                        db.session.commit()
-
-                        flash('Food analysis completed successfully!', 'success')
-                        return render_template('food_analyzer.html', 
-                                             analysis=analysis_text,
-                                             estimated_calories=estimated_calories)
-                    else:
-                        flash(f'Error analyzing food: {result["error"]}')
-
-                except Exception as e:
-                    logging.error(f"Error processing food image: {e}")
-                    flash('Error processing image. Please try again with a clearer photo.', 'danger')
-                    return render_template('food_analyzer.html')
-
-        return render_template('food_analyzer.html')
 
 
 
-    @app.route('/api/food-analysis', methods=['POST'])
-    @login_required
-    def food_analysis_api():
-        try:
-            # Get image data from request
-            if 'image' not in request.files:
-                return jsonify({'success': False, 'error': 'No image provided'})
-
-            image_file = request.files['image']
-
-            # Process image with food analysis
-            result = gemini.analyze_food_image(image_file)
-
-            return jsonify({'success': True, 'data': result})
-
-        except Exception as e:
-            logging.error(f"Error in food analysis API: {e}")
-            return jsonify({'success': False, 'error': str(e)})
 
 
-
-            db.session.add(workout)
-            db.session.flush()  # Get the workout ID
-
-            # Add exercises
-            for exercise_data in data.get('exercises', []):
-                exercise = Exercise(
-                    workout_id=workout.id,
-                    name=exercise_data.get('name', ''),
-                    reps=exercise_data.get('reps', 0),
-                    sets=exercise_data.get('sets', 1),
-                    form_accuracy=exercise_data.get('form_accuracy', 0),
-                    exercise_type=exercise_data.get('exercise_type', 'cardio')
-                )
-                db.session.add(exercise)
-
-            db.session.commit()
-
-            return jsonify({
-                'success': True,
-                'message': 'Workout saved successfully',
-                'workout_id': workout.id
-            })
-
-        except Exception as e:
-            db.session.rollback()
-            logging.error(f"Error saving workout: {e}")
-            return jsonify({
-                'success': False,
-                'error': 'Failed to save workout'
-            })
 
     @app.route('/api/fitness-chat', methods=['POST'])
     @login_required
@@ -418,51 +309,11 @@ def register_routes(flask_app):
 
     # All workout-related code has been removed
 
-    @app.route('/api/save-food-log', methods=['POST'])
-    @login_required
-    def save_food_log():
-        try:
-            data = request.get_json()
 
-            food_log = FoodLog(
-                user_id=current_user.id,
-                food_items=json.dumps(data.get('food_items', [])),
-                total_calories=data.get('total_calories', 0),
-                meal_type=data.get('meal_type', 'snack')
-            )
-
-            db.session.add(food_log)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Food log saved successfully!'})
-
-        except Exception as e:
-            logging.error(f"Error saving food log: {e}")
-            return jsonify({'success': False, 'error': str(e)})
 
     # All workout-related code has been removed
 
-    @app.route('/api/get-food-history')
-    @login_required
-    def get_food_history():
-        try:
-            food_logs = FoodLog.query.filter_by(user_id=current_user.id).order_by(FoodLog.logged_at.desc()).all()
 
-            food_data = []
-            for log in food_logs:
-                food_data.append({
-                    'id': log.id,
-                    'food_items': json.loads(log.food_items) if log.food_items else [],
-                    'total_calories': log.total_calories,
-                    'meal_type': log.meal_type,
-                    'logged_at': log.logged_at.strftime('%Y-%m-%d %H:%M:%S')
-                })
-
-            return jsonify({'success': True, 'data': food_data})
-
-        except Exception as e:
-            logging.error(f"Error getting food history: {e}")
-            return jsonify({'success': False, 'error': str(e)})
 
     @app.route('/api/update-profile', methods=['POST'])
     @login_required
@@ -483,23 +334,7 @@ def register_routes(flask_app):
 
 
 
-    @app.route('/api/delete-food-log/<int:log_id>', methods=['DELETE'])
-    @login_required
-    def delete_food_log(log_id):
-        try:
-            food_log = FoodLog.query.filter_by(id=log_id, user_id=current_user.id).first()
 
-            if not food_log:
-                return jsonify({'success': False, 'error': 'Food log not found'}), 404
-
-            db.session.delete(food_log)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Food log deleted successfully!'})
-
-        except Exception as e:
-            logging.error(f"Error deleting food log: {e}")
-            return jsonify({'success': False, 'error': str(e)})
 
     @app.route('/api/export-data')
     @login_required
@@ -507,7 +342,7 @@ def register_routes(flask_app):
         try:
             # Get user's data
             workouts = Workout.query.filter_by(user_id=current_user.id).all()
-            food_logs = FoodLog.query.filter_by(user_id=current_user.id).all()
+
 
             # Prepare export data
             export_data = {
@@ -517,8 +352,7 @@ def register_routes(flask_app):
                     'fitness_level': current_user.fitness_level,
                     'fitness_goals': current_user.fitness_goals
                 },
-                'workouts': [],
-                'food_logs': []
+                'workouts': []
             }
 
             for workout in workouts:
@@ -530,13 +364,7 @@ def register_routes(flask_app):
                     'difficulty': workout.difficulty
                 })
 
-            for log in food_logs:
-                export_data['food_logs'].append({
-                    'food_items': json.loads(log.food_items) if log.food_items else [],
-                    'total_calories': log.total_calories,
-                    'meal_type': log.meal_type,
-                    'logged_at': log.logged_at.strftime('%Y-%m-%d %H:%M:%S')
-                })
+
 
             return jsonify({'success': True, 'data': export_data})
 
@@ -561,15 +389,7 @@ def register_routes(flask_app):
                 )
                 db.session.add(workout)
 
-            # Import food logs
-            for log_data in data.get('food_logs', []):
-                food_log = FoodLog(
-                    user_id=current_user.id,
-                    food_items=json.dumps(log_data.get('food_items', [])),
-                    total_calories=log_data.get('total_calories', 0),
-                    meal_type=log_data.get('meal_type', 'snack')
-                )
-                db.session.add(food_log)
+
 
             db.session.commit()
 
@@ -586,14 +406,13 @@ def register_routes(flask_app):
         try:
             # Get user's data
             workouts = Workout.query.filter_by(user_id=current_user.id).all()
-            food_logs = FoodLog.query.filter_by(user_id=current_user.id).all()
+
 
             # Create backup data
             backup_data = {
                 'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                 'user_id': current_user.id,
-                'workouts': [],
-                'food_logs': []
+                'workouts': []
             }
 
             for workout in workouts:
@@ -605,13 +424,7 @@ def register_routes(flask_app):
                     'difficulty': workout.difficulty
                 })
 
-            for log in food_logs:
-                backup_data['food_logs'].append({
-                    'food_items': json.loads(log.food_items) if log.food_items else [],
-                    'total_calories': log.total_calories,
-                    'meal_type': log.meal_type,
-                    'logged_at': log.logged_at.strftime('%Y-%m-%d %H:%M:%S')
-                })
+
 
             return jsonify({'success': True, 'data': backup_data})
 
@@ -627,7 +440,7 @@ def register_routes(flask_app):
 
             # Clear existing data
             Workout.query.filter_by(user_id=current_user.id).delete()
-            FoodLog.query.filter_by(user_id=current_user.id).delete()
+
 
             # Restore workouts
             for workout_data in data.get('workouts', []):
@@ -640,15 +453,7 @@ def register_routes(flask_app):
                 )
                 db.session.add(workout)
 
-            # Restore food logs
-            for log_data in data.get('food_logs', []):
-                food_log = FoodLog(
-                    user_id=current_user.id,
-                    food_items=json.dumps(log_data.get('food_items', [])),
-                    total_calories=log_data.get('total_calories', 0),
-                    meal_type=log_data.get('meal_type', 'snack')
-                )
-                db.session.add(food_log)
+
 
             db.session.commit()
 
@@ -665,7 +470,7 @@ def register_routes(flask_app):
         try:
             # Clear all user data
             Workout.query.filter_by(user_id=current_user.id).delete()
-            FoodLog.query.filter_by(user_id=current_user.id).delete()
+
 
             db.session.commit()
 
@@ -732,16 +537,7 @@ def register_routes(flask_app):
         return jsonify({
             'endpoints': [
                 '/api/pose-detection',
-                '/api/food-analysis',
-                '/api/fitness-chat',
-                '/api/dashboard-stats',
-                '/api/complete-workout',
-                '/api/save-food-log',
-                '/api/get-workout-history',
-                '/api/get-food-history',
-                '/api/update-profile',
                 '/api/delete-workout/<id>',
-                '/api/delete-food-log/<id>',
                 '/api/export-data',
                 '/api/import-data',
                 '/api/backup-data',
@@ -753,4 +549,285 @@ def register_routes(flask_app):
             ]
         })
 
+    @app.route('/yoga')
+    @login_required
+    def yoga_hub():
+        return render_template('yoga.html')
 
+    @app.route('/api/generate-yoga-plan', methods=['POST'])
+    @login_required
+    def generate_yoga_plan():
+        try:
+            data = request.json
+            user_profile = {
+                'feeling': data.get('feeling'),
+                'goal': data.get('goal'),
+                'duration': data.get('duration'),
+                'mobility': data.get('mobility'),
+                'level': current_user.fitness_level
+            }
+            
+            result = yoga_service.generate_plan(user_profile)
+            return jsonify(result)
+        except Exception as e:
+            logging.error(f"Yoga plan generation error: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/diet')
+    @login_required
+    def diet_planner():
+        return render_template('diet.html')
+
+    @app.route('/voice-assistant')
+    @login_required
+    def voice_assistant():
+        """Bilingual (Hindi/English) voice chatbot - in-app feature on same localhost."""
+        if "voice_chat_history" not in session:
+            session["voice_chat_history"] = []
+        return render_template('voice_assistant.html')
+
+    def _voice_process_stream_generator():
+        """Stream: user_text -> tokens -> assistant_text -> audio -> done. Real-time feel."""
+        try:
+            audio_bytes = None
+            if request.files and request.files.get("audio"):
+                audio_bytes = request.files["audio"].read()
+            elif request.is_json:
+                data = request.get_json() or {}
+                b64 = data.get("audio_base64")
+                if b64:
+                    audio_bytes = base64.b64decode(b64)
+            if not audio_bytes:
+                yield json.dumps({"type": "error", "error": "No audio provided"}) + "\n"
+                return
+
+            history = session.get("voice_chat_history") or []
+            user_text, detected_lang = voice_svc.transcribe(audio_bytes)
+            if not user_text or not user_text.strip():
+                yield json.dumps({"type": "error", "error": "No speech detected"}) + "\n"
+                return
+
+            yield json.dumps({"type": "user_text", "text": user_text}) + "\n"
+
+            messages = voice_svc.build_messages_for_ollama(history, user_text, detected_language=detected_lang)
+            reply = ""
+            for token, full in voice_svc.ollama_chat_stream(messages):
+                reply = full
+                yield json.dumps({"type": "token", "text": token}) + "\n"
+
+            history.append({"role": "user", "content": user_text})
+            history.append({"role": "assistant", "content": reply})
+            session["voice_chat_history"] = history
+
+            yield json.dumps({"type": "assistant_text", "text": reply}) + "\n"
+
+            mp3_bytes = voice_svc.text_to_speech_mp3_bytes(reply)
+            if mp3_bytes:
+                audio_b64 = base64.b64encode(mp3_bytes).decode("utf-8")
+                yield json.dumps({"type": "audio", "base64": audio_b64}) + "\n"
+            yield json.dumps({"type": "done"}) + "\n"
+        except Exception as e:
+            logging.exception("Voice stream error: %s", e)
+            yield json.dumps({"type": "error", "error": str(e)}) + "\n"
+
+    @app.route('/api/voice/process', methods=['POST'])
+    @login_required
+    def api_voice_process():
+        """Streaming: transcribe -> stream LLM tokens -> TTS. Real-time response."""
+        return Response(
+            stream_with_context(_voice_process_stream_generator()),
+            mimetype="application/x-ndjson",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    @app.route('/api/voice/process_legacy', methods=['POST'])
+    @login_required
+    def api_voice_process_legacy():
+        """Non-streaming fallback: accept audio, return full JSON when done."""
+        try:
+            audio_bytes = None
+            if request.files and request.files.get("audio"):
+                audio_bytes = request.files["audio"].read()
+            elif request.is_json:
+                data = request.get_json() or {}
+                b64 = data.get("audio_base64")
+                if b64:
+                    audio_bytes = base64.b64decode(b64)
+            if not audio_bytes:
+                return jsonify({"success": False, "error": "No audio provided"}), 400
+
+            history = session.get("voice_chat_history") or []
+            user_text, detected_lang = voice_svc.transcribe(audio_bytes)
+            if not user_text or not user_text.strip():
+                return jsonify({"success": False, "error": "No speech detected"}), 400
+
+            messages = voice_svc.build_messages_for_ollama(history, user_text, detected_language=detected_lang)
+            reply = voice_svc.ollama_chat(messages)
+            history.append({"role": "user", "content": user_text})
+            history.append({"role": "assistant", "content": reply})
+            session["voice_chat_history"] = history
+
+            audio_b64 = None
+            mp3_bytes = voice_svc.text_to_speech_mp3_bytes(reply)
+            if mp3_bytes:
+                audio_b64 = base64.b64encode(mp3_bytes).decode("utf-8")
+
+            return jsonify({
+                "success": True,
+                "user_text": user_text,
+                "assistant_text": reply,
+                "audio_base64": audio_b64,
+                "history": history,
+            })
+        except Exception as e:
+            logging.exception("Voice process error: %s", e)
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route('/api/voice/process_text', methods=['POST'])
+    @login_required
+    def api_voice_process_text():
+        """Accept text (no audio); run chat + TTS and return JSON. Use when mic is unavailable."""
+        try:
+            user_text = None
+            if request.form and request.form.get("text"):
+                user_text = request.form.get("text", "").strip()
+            elif request.is_json:
+                user_text = (request.get_json() or {}).get("text", "").strip()
+            if not user_text:
+                return jsonify({"success": False, "error": "No text provided"}), 400
+
+            detected_lang = voice_svc.detect_response_language(user_text)
+            history = session.get("voice_chat_history") or []
+            messages = voice_svc.build_messages_for_ollama(history, user_text, detected_language=detected_lang)
+            reply = voice_svc.ollama_chat(messages)
+            history.append({"role": "user", "content": user_text})
+            history.append({"role": "assistant", "content": reply})
+            session["voice_chat_history"] = history
+
+            audio_b64 = None
+            mp3_bytes = voice_svc.text_to_speech_mp3_bytes(reply)
+            if mp3_bytes:
+                audio_b64 = base64.b64encode(mp3_bytes).decode("utf-8")
+
+            return jsonify({
+                "success": True,
+                "user_text": user_text,
+                "assistant_text": reply,
+                "audio_base64": audio_b64,
+                "history": history,
+            })
+        except Exception as e:
+            logging.exception("Voice process_text error: %s", e)
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route('/api/voice/clear', methods=['POST'])
+    @login_required
+    def api_voice_clear():
+        """Clear voice chat history for current user."""
+        session["voice_chat_history"] = []
+        return jsonify({"success": True})
+
+    @app.route('/api/generate-diet-plan', methods=['POST'])
+    @login_required
+    def generate_diet_plan():
+        try:
+            data = request.json
+            user_profile = {
+                'age': data.get('age'),
+                'weight': data.get('weight'),
+                'goal': data.get('goal'),
+                'preference': data.get('preference'),
+                'allergies': data.get('allergies')
+            }
+            
+            result = diet_service.generate_diet_plan(user_profile)
+            return jsonify(result)
+        except Exception as e:
+            logging.error(f"Diet plan generation error: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/authorize/google-fit')
+    @login_required
+    def authorize_google_fit():
+        # Auto-correct domain mismatch (e.g. 127.0.0.1 vs localhost)
+        # This prevents the "Session expired" error by ensuring cookie domain matches redirect URI
+        redirect_uri = google_fit_service.redirect_uri
+        if redirect_uri:
+            from urllib.parse import urlparse
+            parsed_redirect = urlparse(redirect_uri)
+            expected_host = parsed_redirect.netloc # e.g. localhost:5000
+            
+            # If user is on 127.0.0.1 but config expects localhost (or vice versa)
+            if request.host != expected_host:
+                logging.info(f"Redirecting from {request.host} to {expected_host} for OAuth consistency")
+                # Reconstruct URL for the expected host
+                new_url = f"{parsed_redirect.scheme}://{expected_host}{url_for('authorize_google_fit')}"
+                return redirect(new_url)
+
+        try:
+            auth_url, state, _ = google_fit_service.get_auth_url()
+            session['oauth_state'] = state
+            return redirect(auth_url)
+        except Exception as e:
+            flash(f"Error initializing Google Fit auth: {e}", "error")
+            return redirect(url_for('dashboard'))
+
+    @app.route('/oauth2callback')
+    def oauth2callback():
+        # Handle errors from Google (e.g., access_denied)
+        if 'error' in request.args:
+            error_msg = request.args.get('error')
+            flash(f"Google Fit connection failed: {error_msg}. (Did you add your email as a Test User in Google Cloud?)", "error")
+            return redirect(url_for('dashboard'))
+
+        try:
+            if 'oauth_state' not in session:
+                flash("Session expired or invalid state. Please try connecting again.", "error")
+                return redirect(url_for('dashboard'))
+
+            state = session['oauth_state']
+            callback_state = request.args.get('state')
+
+            if callback_state != state:
+                flash("Invalid OAuth state. Please try connecting again.", "error")
+                return redirect(url_for('dashboard'))
+
+            flow_credentials = google_fit_service.get_credentials_from_code(
+                request.url,
+                state=state
+            )
+
+            # One-time OAuth artifacts are no longer needed after token exchange.
+            session.pop('oauth_state', None)
+            
+            # Store credentials in session (in production, strictly encrypt or store in DB)
+            creds_dict = google_fit_service.credentials_to_dict(flow_credentials)
+            session['google_fit_credentials'] = creds_dict
+            session['google_fit_token'] = True # Marker for UI
+            
+            flash("Successfully connected to Google Fit!", "success")
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            logging.error(f"OAuth callback error: {e}")
+            flash(f"Failed to connect to Google Fit: {str(e)}", "error")
+            return redirect(url_for('dashboard'))
+
+    @app.route('/api/google-fit-data')
+    @login_required
+    def google_fit_data():
+        if 'google_fit_credentials' not in session:
+            return jsonify({'success': False, 'error': 'Not connected'})
+            
+        try:
+            creds_dict = session['google_fit_credentials']
+            credentials = google_fit_service.dict_to_credentials(creds_dict)
+            
+            data = google_fit_service.get_fitness_data(credentials)
+            
+            if data:
+                return jsonify({'success': True, 'data': data})
+            else:
+                return jsonify({'success': False, 'error': 'Failed to fetch data'})
+        except Exception as e:
+             # Basic token refresh logic handling needed or re-auth prompt
+            return jsonify({'success': False, 'error': str(e)})

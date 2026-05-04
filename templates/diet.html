@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Diet Planner - VisionFit AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="margin-top: 60px;">
+    <div class="row justify-content-center">
+        <!-- Input Panel -->
+        <div class="col-lg-4 mb-4">
+            <div class="glass-panel p-4 h-100">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px; border-radius: 50%; background: var(--gradient-success); box-shadow: 0 0 20px rgba(0, 242, 96, 0.4);">
+                        <i class="fas fa-carrot fa-2x text-white"></i>
+                    </div>
+                    <h2 class="h3 fw-bold">AI Dietitian</h2>
+                    <p class="text-secondary small">Personalized Nutrition Plans</p>
+                </div>
+
+                <form id="dietForm">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-white">Weight (kg)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="weight"
+                                value="70" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-white">Age</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="age"
+                                value="25" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Diet Preference</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="preference">
+                            <option value="Standard">Standard (Omnivore)</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Keto">Ketogenic (Low Carb)</option>
+                            <option value="Paleo">Paleo</option>
+                            <option value="High Protein">High Protein</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Goal</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="goal">
+                            <option value="Maintain Weight">Maintain Weight</option>
+                            <option value="Lose Weight">Lose Weight (Fat Loss)</option>
+                            <option value="Build Muscle">Build Muscle (Bulking)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">Allergies / Exclusions</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" id="allergies" rows="2"
+                            placeholder="e.g. No nuts, Gluten-free..."></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg"
+                            style="background: var(--gradient-success); border: none; box-shadow: 0 0 15px rgba(0, 242, 96, 0.3);">
+                            <i class="fas fa-utensils me-2"></i>Generate Meal Plan
+                        </button>
+                    </div>
+                </form>
+
+                <div id="statusMessage" class="mt-3 text-center small"></div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="col-lg-7">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center d-none py-5">
+                <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h4 class="text-white animate-pulse">Cooking up your plan...</h4>
+                <p class="text-secondary">Analyzing nutritional requirements.</p>
+            </div>
+
+            <!-- Results State -->
+            <div id="planResult" class="d-none">
+                <div class="mb-4">
+                    <h3 class="fw-bold text-gradient mb-1">Your 1-Day Meal Plan</h3>
+                    <p class="text-secondary mb-0" id="planSummary">Balanced nutrition for your goals.</p>
+                </div>
+
+                <!-- Macro Cards -->
+                <div class="row mb-4 text-center">
+                    <div class="col-3">
+                        <div class="glass-card p-2 border-top border-success">
+                            <small class="text-secondary d-block">Calories</small>
+                            <strong class="text-white h5" id="macroCal">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="glass-card p-2 border-top border-danger">
+                            <small class="text-secondary d-block">Protein</small>
+                            <strong class="text-white h5" id="macroPro">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="glass-card p-2 border-top border-warning">
+                            <small class="text-secondary d-block">Carbs</small>
+                            <strong class="text-white h5" id="macroCarb">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="glass-card p-2 border-top border-info">
+                            <small class="text-secondary d-block">Fats</small>
+                            <strong class="text-white h5" id="macroFat">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meals Timeline -->
+                <div class="timeline-container" id="mealsList">
+                    <!-- Meals inserted via JS -->
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5 opacity-50">
+                <i class="fas fa-apple-alt fa-5x mb-3 text-secondary"></i>
+                <h3>Eat Smarter</h3>
+                <p>Enter your details to get a customized meal plan.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('dietForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // UI Updates
+        document.getElementById('emptyState').classList.add('d-none');
+        document.getElementById('planResult').classList.add('d-none');
+        document.getElementById('loadingState').classList.remove('d-none');
+
+        // Data
+        const formData = {
+            age: document.getElementById('age').value,
+            weight: document.getElementById('weight').value,
+            preference: document.getElementById('preference').value,
+            goal: document.getElementById('goal').value,
+            allergies: document.getElementById('allergies').value
+        };
+
+        try {
+            const response = await fetch('/api/generate-diet-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                renderPlan(data.plan);
+            } else {
+                document.getElementById('statusMessage').innerText = "Error generating plan.";
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('statusMessage').innerText = "Network Error.";
+        } finally {
+            document.getElementById('loadingState').classList.add('d-none');
+        }
+    });
+
+    function renderPlan(plan) {
+        document.getElementById('planSummary').textContent = plan.summary;
+
+        // Macros
+        document.getElementById('macroCal').textContent = plan.macros.calories;
+        document.getElementById('macroPro').textContent = plan.macros.protein;
+        document.getElementById('macroCarb').textContent = plan.macros.carbs;
+        document.getElementById('macroFat').textContent = plan.macros.fats;
+
+        const container = document.getElementById('mealsList');
+        container.innerHTML = '';
+
+        plan.meals.forEach((meal, index) => {
+            const html = `
+            <div class="glass-card p-3 mb-3 animate-up" style="animation-delay: ${index * 0.1}s">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-dark border border-secondary text-secondary mb-1">${meal.type}</span>
+                        <h5 class="text-white mb-1">${meal.name}</h5>
+                        <p class="small text-secondary mb-0"><i class="fas fa-carrot me-1"></i> ${meal.ingredients}</p>
+                    </div>
+                    <div class="text-end">
+                        <h4 class="text-neon-cyan mb-0">${meal.calories}</h4>
+                        <small class="text-secondary">kcal</small>
+                    </div>
+                </div>
+            </div>
+        `;
+            container.innerHTML += html;
+        });
+
+        document.getElementById('planResult').classList.remove('d-none');
+    }
+</script>
+
+<style>
+    .animate-up {
+        animation: fadeInUp 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

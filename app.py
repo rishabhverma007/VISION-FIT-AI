@@ -2,8 +2,13 @@ import os
 import logging
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_session import Session
+
+# Load environment variables
+load_dotenv()
 
 # Import extensions
 from extensions import db, login_manager
@@ -16,6 +21,12 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+    # Configure Server-Side Sessions (to handle large OAuth tokens)
+    app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_USE_SIGNER"] = True
+    Session(app)
 
     # Configure the database
     # Handle potential "postgres://" URLs from Railway
@@ -38,7 +49,7 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         from models import User
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     with app.app_context():
         # Import models first

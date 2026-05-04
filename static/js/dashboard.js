@@ -12,6 +12,11 @@ class DashboardManager {
         this.init();
     }
 
+    // Bluetooth Manager Removed
+    initBluetooth() {
+        // Bluetooth functionality removed in favor of Google Fit
+    }
+
     async init() {
         try {
             await this.loadDashboardData();
@@ -19,6 +24,9 @@ class DashboardManager {
             this.setupChatInterface();
             this.setupEventListeners();
             this.startLiveUpdates();
+
+            this.startLiveUpdates();
+            this.initBluetooth();
 
             console.log('Dashboard initialized successfully');
         } catch (error) {
@@ -37,6 +45,17 @@ class DashboardManager {
             } else {
                 throw new Error(response.error || 'Failed to load dashboard data');
             }
+
+            // Also load Google Fit data if available
+            this.loadGoogleFitData();
+
+            // Auto-refresh Google Fit data every 60 seconds
+            if (!this.fitInterval) {
+                this.fitInterval = setInterval(() => {
+                    this.loadGoogleFitData();
+                }, 60000);
+            }
+
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
             // Use mock data for demonstration
@@ -44,6 +63,77 @@ class DashboardManager {
             this.updateStatCards();
         }
     }
+
+    async loadGoogleFitData() {
+        try {
+            const response = await VisionFit.api.get('/google-fit-data');
+            if (response.success && response.data) {
+                this.updateGoogleFitUI(response.data);
+            }
+        } catch (error) {
+            console.log('Google Fit data not available or not connected');
+        }
+    }
+
+    updateGoogleFitUI(data) {
+        // Update the Health Sync sidebar widgets
+
+        // Show metrics section if hidden
+        const metricsSection = document.getElementById('googleFitMetrics');
+        const connectSection = document.getElementById('googleFitConnect');
+        const statusBadge = document.getElementById('googleFitStatus');
+
+        if (metricsSection) metricsSection.classList.remove('d-none');
+        if (connectSection) connectSection.classList.add('d-none');
+        if (statusBadge) statusBadge.innerHTML = '<span class="text-success">● On</span>';
+
+        // Animate numbers
+        const animateValue = (id, start, end, duration) => {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            start = start || 0;
+            end = end || 0;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        };
+
+        // Steps
+        if (data.steps !== undefined) {
+            animateValue('fitSteps', 0, data.steps, 1000);
+        }
+
+        // Calories
+        if (data.calories !== undefined) {
+            animateValue('fitCalories', 0, data.calories, 1000);
+        }
+
+        // Heart Rate
+        const hrEl = document.getElementById('fitHeartRate');
+        if (hrEl && data.heart_rate) {
+            hrEl.textContent = data.heart_rate;
+            if (data.heart_rate !== '--') {
+                // Add pulse effect
+                const icon = hrEl.closest('.d-flex').querySelector('.fa-heartbeat');
+                if (icon) icon.classList.add('heart-pulse');
+            }
+        }
+
+        // Update timestamp
+        const timeEl = document.getElementById('fitLastUpdate');
+        if (timeEl) {
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+    }
+
 
     generateMockData() {
         const dates = [];
@@ -80,10 +170,10 @@ class DashboardManager {
         const totalCaloriesCard = document.getElementById('totalCaloriesCard');
         const avgDurationCard = document.getElementById('avgDurationCard');
         const streakCard = document.getElementById('streakCard');
-        
+
         // Use the values already set in the HTML template
         // These cards are populated from the server-side data
-        
+
         // Update sidebar stats if available
         const weeklyWorkouts = document.getElementById('weeklyWorkouts');
         if (weeklyWorkouts && this.dashboardData && this.dashboardData.calories_burned) {
@@ -164,7 +254,7 @@ class DashboardManager {
                         },
                         ticks: {
                             color: '#6c757d',
-                            callback: function(value) {
+                            callback: function (value) {
                                 return value + ' cal';
                             }
                         }
@@ -238,7 +328,7 @@ class DashboardManager {
                         cornerRadius: 8,
                         padding: 12,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return context.label + ': ' + context.parsed + '%';
                             }
                         }
@@ -525,8 +615,11 @@ class DashboardManager {
     }
 }
 
+
+
+
 // Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Check if we're on the dashboard page
     if (document.getElementById('workoutChart')) {
         window.dashboardManager = new DashboardManager();
@@ -534,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('beforeunload', function () {
     if (window.dashboardManager) {
         window.dashboardManager.destroy();
     }

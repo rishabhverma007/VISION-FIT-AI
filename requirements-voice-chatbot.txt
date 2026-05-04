@@ -1,0 +1,12 @@
+# Bilingual Voice Chatbot (Hindi/English) - Sarvam AI (cloud APIs)
+# Install in a venv: pip install -r requirements-voice-chatbot.txt
+# Run: streamlit run voice_chatbot_app.py
+
+# Web UI
+streamlit>=1.31.0
+
+# HTTP client for Sarvam APIs
+requests>=2.31.0
+
+# Language detection for TTS voice switching (Hindi vs English)
+langdetect>=1.0.9

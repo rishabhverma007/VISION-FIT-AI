@@ -27,9 +27,12 @@
                             <div class="col-md-6 mb-3">
                                 <label for="fitness_level" class="form-label">Fitness Level</label>
                                 <select class="form-select" id="fitness_level" name="fitness_level" required>
-                                    <option value="beginner" {% if current_user.fitness_level == 'beginner' %}selected{% endif %}>Beginner</option>
-                                    <option value="intermediate" {% if current_user.fitness_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
-                                    <option value="advanced" {% if current_user.fitness_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                                    <option value="beginner" {% if current_user.fitness_level=='beginner' %}selected{%
+                                        endif %}>Beginner</option>
+                                    <option value="intermediate" {% if current_user.fitness_level=='intermediate'
+                                        %}selected{% endif %}>Intermediate</option>
+                                    <option value="advanced" {% if current_user.fitness_level=='advanced' %}selected{%
+                                        endif %}>Advanced</option>
                                 </select>
                             </div>
 
@@ -45,8 +48,19 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="limitations" class="form-label">Physical Limitations / Accessibility</label>
+                            <select class="form-select" id="limitations" name="limitations">
+                                <option value="none">None (Standard Workout)</option>
+                                <option value="seated">Seated / Chair Workout</option>
+                                <option value="low_impact">Low Impact (No Jumping)</option>
+                                <option value="mobility_limited">Limited Mobility</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="goals" class="form-label">Fitness Goals</label>
-                            <textarea class="form-control" id="goals" name="goals" rows="3" placeholder="E.g., lose weight, build muscle, improve endurance, get stronger...">{{ current_user.fitness_goals }}</textarea>
+                            <textarea class="form-control" id="goals" name="goals" rows="3"
+                                placeholder="E.g., lose weight, build muscle, improve endurance, get stronger...">{{ current_user.fitness_goals }}</textarea>
                         </div>
 
                         <div class="text-center">
@@ -72,13 +86,15 @@
     <div class="row mb-5">
         <div class="col-12">
             <div class="card glass-card">
-                <div class="card-header text-white" style="background: linear-gradient(135deg, var(--success), var(--accent));">
+                <div class="card-header text-white"
+                    style="background: linear-gradient(135deg, var(--success), var(--accent));">
                     <h5 class="mb-0">
                         <i class="fas fa-star me-2"></i>Your New AI-Generated Workout Plan
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert mb-4" style="background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success);">
+                    <div class="alert mb-4"
+                        style="background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success);">
                         <i class="fas fa-check-circle me-2"></i>
                         <strong>Success!</strong> Your personalized workout plan has been generated and saved.
                     </div>
@@ -88,13 +104,18 @@
                     </div>
 
                     <div class="mt-4 d-flex flex-wrap gap-2">
-                        <button class="btn btn-success" style="background-color: var(--success); border-color: var(--success);" onclick="printPlan()">
+                        <button class="btn btn-success"
+                            style="background-color: var(--success); border-color: var(--success);"
+                            onclick="printPlan()">
                             <i class="fas fa-print me-2"></i>Print Plan
                         </button>
-                        <button class="btn btn-outline-primary" style="color: var(--primary); border-color: var(--primary);" onclick="startNewPlan()">
+                        <button class="btn btn-outline-primary"
+                            style="color: var(--primary); border-color: var(--primary);" onclick="startNewPlan()">
                             <i class="fas fa-play me-2"></i>Start This Plan
                         </button>
-                        <button class="btn btn-outline-secondary" style="color: var(--secondary); border-color: var(--secondary);" onclick="generateAnother()">
+                        <button class="btn btn-outline-secondary"
+                            style="color: var(--secondary); border-color: var(--secondary);"
+                            onclick="generateAnother()">
                             <i class="fas fa-magic me-2"></i>Generate Another
                         </button>
                         <button class="btn btn-outline-info" onclick="clearNewPlan()">
@@ -114,68 +135,68 @@
 <!-- Rest of modal removed -->
 
 <style>
-.plan-content {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px;
-    border: 1px solid #e9ecef;
-}
+    .plan-content {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid #e9ecef;
+    }
 
-.plan-content pre {
-    margin: 0;
-    white-space: pre-wrap;
-    font-family: 'Inter', sans-serif;
-}
+    .plan-content pre {
+        margin: 0;
+        white-space: pre-wrap;
+        font-family: 'Inter', sans-serif;
+    }
 
-.plan-text {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: #495057;
-    background: #ffffff;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 20px;
-    max-height: 500px;
-    overflow-y: auto;
-}
+    .plan-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #495057;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
 
-.card {
-    transition: all 0.3s ease;
-}
+    .card {
+        transition: all 0.3s ease;
+    }
 
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-}
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    }
 
-.btn-sm {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.875rem;
-}
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
 </style>
 
 <script>
-// Variable currentPlanId removed as it's no longer needed
+    // Variable currentPlanId removed as it's no longer needed
 
-// Form submission
-document.getElementById('workoutPlanForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    // Form submission
+    document.getElementById('workoutPlanForm').addEventListener('submit', function (e) {
+        e.preventDefault();
 
-    // Show loading animation
-    document.getElementById('loadingAnimation').style.display = 'block';
+        // Show loading animation
+        document.getElementById('loadingAnimation').style.display = 'block';
 
-    // Submit form after a delay to show loading
-    setTimeout(() => {
-        this.submit();
-    }, 500);
-});
+        // Submit form after a delay to show loading
+        setTimeout(() => {
+            this.submit();
+        }, 500);
+    });
 
-// Print the generated plan
-function printPlan() {
-    const planContent = document.querySelector('.plan-text').textContent;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
+    // Print the generated plan
+    function printPlan() {
+        const planContent = document.querySelector('.plan-text').textContent;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
         <html>
             <head>
                 <title>Workout Plan - VisionFit AI</title>
@@ -194,56 +215,56 @@ function printPlan() {
             </body>
         </html>
     `);
-    printWindow.document.close();
-    printWindow.print();
-}
+        printWindow.document.close();
+        printWindow.print();
+    }
 
-// Start the newly generated plan
-function startNewPlan() {
-    // Redirect to dashboard to start working out
-    window.location.href = '{{ url_for("dashboard") }}';
-}
+    // Start the newly generated plan
+    function startNewPlan() {
+        // Redirect to dashboard to start working out
+        window.location.href = '{{ url_for("dashboard") }}';
+    }
 
-// Generate another plan
-function generateAnother() {
-    // Clear the current plan display
-    clearNewPlan();
-    // Scroll to the form
-    document.getElementById('workoutPlanForm').scrollIntoView({ behavior: 'smooth' });
-}
+    // Generate another plan
+    function generateAnother() {
+        // Clear the current plan display
+        clearNewPlan();
+        // Scroll to the form
+        document.getElementById('workoutPlanForm').scrollIntoView({ behavior: 'smooth' });
+    }
 
-// Clear the newly generated plan
-function clearNewPlan() {
-    // Reload the page to clear the plan variable
-    window.location.reload();
-}
+    // Clear the newly generated plan
+    function clearNewPlan() {
+        // Reload the page to clear the plan variable
+        window.location.reload();
+    }
 
-// Functions related to viewing and starting existing plans have been removed
+    // Functions related to viewing and starting existing plans have been removed
 
-// Function simplified since we no longer need to track plan IDs
-function startCurrentPlan() {
-    // Redirect to dashboard to start working out
-    window.location.href = '{{ url_for("dashboard") }}';
-}
+    // Function simplified since we no longer need to track plan IDs
+    function startCurrentPlan() {
+        // Redirect to dashboard to start working out
+        window.location.href = '{{ url_for("dashboard") }}';
+    }
 
-// Add some dynamic effects
-document.addEventListener('DOMContentLoaded', function() {
-    // Animate cards on scroll
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
+    // Add some dynamic effects
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animate cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
         });
     });
-
-    document.querySelectorAll('.card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.6s ease';
-        observer.observe(card);
-    });
-});
 </script>
 {% endblock %}

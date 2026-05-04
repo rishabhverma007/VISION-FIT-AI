@@ -1,122 +1,205 @@
-# Overview
+# VisionFit AI 🏋️‍♂️🥗🧘‍♀️
 
-VisionFit AI is a comprehensive nutrition and fitness application that combines artificial intelligence with computer vision for personalized health guidance. The system uses Google's Gemini AI for intelligent workout plan generation and nutritional analysis, while MediaPipe provides real-time pose detection for exercise form analysis. The application supports food image analysis for calorie counting, AI-powered workout planning, and real-time exercise form tracking with feedback.
+<div align="center">
+  <p><strong>Your Personal, AI-Powered Digital AI Health & Fitness Coach.</strong></p>
+  
+  ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+  ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
+  ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
+  ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+  ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+  ![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)
+</div>
 
-# User Preferences
+<br/>
 
-Preferred communication style: Simple, everyday language.
+**VisionFit AI** is a comprehensive health and fitness platform that bridges the gap between state-of-the-art computer vision and advanced Generative AI (Google Gemini & Local LLMs via Ollama) to bring you a hyper-personalized fitness experience. Unlike standard fitness apps, VisionFit AI observes your form, plans your meals, curates your yoga flows, and coaches you locally in multiple languages.
 
-# System Architecture
+---
 
-## Backend Architecture
-- **Framework**: Flask web application with SQLAlchemy ORM
-- **Database**: SQLite (default) with PostgreSQL support via psycopg2-binary
-- **Authentication**: Flask-Login for user session management
-- **Extensions Pattern**: Centralized extension initialization to avoid circular imports
+## 📸 Project Showcase
 
-## Frontend Architecture
-- **Template Engine**: Jinja2 with Bootstrap 5 for responsive design
-- **JavaScript Architecture**: Modular approach with dedicated files for specific features
-- **Styling**: Custom CSS with CSS variables for theming and glass morphism effects
-- **Real-time Features**: MediaPipe integration for pose detection and Chart.js for data visualization
+*(Replace the placeholder links with actual screenshots of your application)*
 
-## Computer Vision System
-- **Pose Detection**: MediaPipe Pose solution for real-time body landmark detection
-- **Exercise Analysis**: Custom algorithms for pushups, squats, and jumping jacks
-- **Form Scoring**: Real-time feedback system based on joint angles and body alignment
-- **Image Processing**: OpenCV for image manipulation and Pillow for food image analysis
+| Dashboard & Tracking | Pose Detection (Live) | Workout AI Generation |
+| :---: | :---: | :---: |
+| <img src="https://via.placeholder.com/400x250.png?text=Dashboard+Screenshot" alt="Dashboard" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Pose+Detection" alt="Pose Detection" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Workout+Planner" alt="Planner" width="100%"> |
 
-## AI Integration
-- **Gemini AI**: Google's generative AI for workout plan creation and food analysis
-- **Structured Output**: Pydantic models for consistent AI response formatting
-- **Fallback System**: Mock responses when AI services are unavailable
-- **API Key Management**: Direct configuration with environment variable support
+---
 
-## Data Models
-- **User Model**: Authentication, fitness level, and goals tracking
-- **FoodLog Model**: Nutritional analysis results with image storage
-- **Workout Model**: Exercise tracking with form scores and completion metrics
+## 🚀 Key Features
 
-## Security and Configuration
-- **Password Hashing**: Werkzeug security for password management
-- **Session Management**: Flask sessions with configurable secret keys
-- **Environment Configuration**: Support for development and production settings
-- **Proxy Support**: ProxyFix middleware for deployment behind reverse proxies
+### 1. 📹 Real-Time Pose Detection & Form Analysis
+- **Powered by:** MediaPipe & OpenCV
+- **Functionality:** Tracks 33 body landmarks in real-time continuously via your webcam.
+- **Capabilities:**
+  - **Pushups:** Scrutinizes depth, arm angle, and back posture.
+  - **Squats:** Monitors hip-knee alignments and squat depth.
+  - **Jumping Jacks:** Inspects coordination and range of motion.
+- **Feedback Loop:** Reps are only counted if the form is correct. The system delivers instant visual and audio queues (e.g., "Keep your back straight").
 
-# External Dependencies
+### 2. 🤖 AI Workout Planner
+- **Powered by:** Google Gemini (1.5 Pro / Flash)
+- **Functionality:** Dissects your fitness profile (current levels, equipment, goals, physical limitations) to formulate adaptive 4-week workout regimes.
 
-## AI Services
-- **Google Generative AI**: Gemini 1.5 Flash model for workout planning and food analysis
-- **API Key**: Hardcoded key for Gemini AI service (AIzaSyAGDJZktWCgc-78xHrCp7g4a-nFLyPW6Bw)
+### 3. 🍎 AI Diet Planner (Offline/Local Priority)
+- **Powered by:** Local LLMs via **Ollama** (Llama 3, Mistral) with Cloud fallbacks.
+- **Functionality:** Synthesizes 1-day meal plans broken down by caloric and macronutrient targets. It fully accommodates dietary restrictions (Paleo, Vegan, Keto, etc.).
+- **Privacy First:** Data stays on your machine during inference.
 
-## Computer Vision Libraries
-- **MediaPipe**: Real-time pose detection and landmark extraction
-- **OpenCV**: Image processing and computer vision operations
-- **NumPy**: Numerical computations for pose analysis
+### 4. 🧘 AI Yoga Instructor
+- **Powered by:** Local LLMs via **Ollama**.
+- **Functionality:** Composes custom Yoga flows corresponding to your emotional state (stress, energy), core goals, and physical mobility ("Chair Yoga", "Bed Yoga"). Includes SVG graphics for standard poses.
 
-## Web Framework Stack
-- **Flask**: Core web framework with extensions for login and database management
-- **SQLAlchemy**: ORM for database operations with PostgreSQL and SQLite support
-- **Werkzeug**: WSGI utilities and security features
+### 5. 🎤 Bilingual AI Fitness Chat & Voice Assistant
+- **Powered by:** Google Gemini & Local LLMs + `langdetect`.
+- **Functionality:** In-app real-time conversational interface mapping both **Hindi** and **English**. Talk to your digital coach as naturally as a human without needing third-party cloud APIs.
+- **Bonus:** Standalone Streamlit integration with **Sarvam AI** for advanced regional voice support.
 
-## Frontend Libraries
-- **Bootstrap 5**: Responsive CSS framework via CDN
-- **Font Awesome 6**: Icon library for UI elements
-- **Chart.js**: Data visualization for dashboard metrics
-- **Google Fonts**: Montserrat, Inter, and Roboto font families
+### 6. 📊 Intuitive Dashboard & Google Fit Sync
+- **Capabilities:** Interactive Chart.js data visualizations for your workout streaks, calorie burns, and performance history.
+- **Third-Party Sync:** Deep linking with Google Fit API for automated physical activity ingestion.
 
-## Image Processing
-- **Pillow**: Python image processing library for food photo analysis
-- **Base64**: Image encoding for AI service integration
+---
 
-## Database Support
-- **psycopg2-binary**: PostgreSQL adapter for production deployments
-- **SQLite**: Built-in database for development and simple deployments
+## 🛠️ Technology Stack
 
-## Development Tools
-- **Gunicorn**: WSGI HTTP server for production deployment
-- **Python-dotenv**: Environment variable management
+| Layer | Technologies |
+| --- | --- |
+| **Backend Framework** | Flask, Python 3.8+, Flask-Login, Flask-Session |
+| **Database** | SQLite (Dev), PostgreSQL (Prod) via SQLAlchemy |
+| **Frontend** | HTML5, CSS (Bootstrap 5), Vanilla Javascript, Chart.js |
+| **Computer Vision** | OpenCV, Google MediaPipe, Pillow, NumPy |
+| **Cloud AI Models** | Google GenAI API (Gemini Series) |
+| **Local AI Models** | Ollama (Llama 3, Mistral, Gemma, etc.) |
+| **Integrations** | Google Auth OAuthlib, Google Fit REST API, Sarvam AI |
 
-# Deployment Guide
+---
 
-## Railway Deployment
+## ⚙️ Installation & Setup
 
-VisionFit AI is configured for easy deployment on Railway. Follow these steps to deploy:
+### Prerequisites
+- Python 3.8+
+- Webcam for Pose Detection
+- [Ollama](https://ollama.com/) *(Optional: Required for privacy-first, local offline features)*
+- Google Cloud Project with Gemini API and Fit API enabled.
 
-1. **Create a Railway Account**
-   - Sign up at [railway.app](https://railway.app/) if you don't have an account
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/VisionFitAi.git
+cd VisionFitAi
+```
 
-2. **Install Railway CLI** (Optional)
-   - Install the Railway CLI for easier deployment: `npm i -g @railway/cli`
-   - Login using: `railway login`
+### 2. Set Up Virtual Environment
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
 
-3. **Create a New Project**
-   - From the Railway dashboard, click "New Project"
-   - Select "Deploy from GitHub repo"
-   - Connect your GitHub account and select this repository
+# macOS/Linux
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-4. **Configure Environment Variables**
-   - In your Railway project, go to the "Variables" tab
-   - Add the following environment variables:
-     - `SESSION_SECRET`: A secure random string for session encryption
-     - `DATABASE_URL`: Railway will automatically provide this for PostgreSQL
-     - `GOOGLE_API_KEY`: Your Google Gemini API key
-     - `PORT`: Railway will set this automatically
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-5. **Add PostgreSQL Database**
-   - Click "+ New" and select "Database" → "PostgreSQL"
-   - Railway will automatically link the database to your project
+### 4. Configure Environment Variables
+Create a `.env` file in the root directory by copying the example template:
+```bash
+cp .env.example .env
+```
+*(If on Windows use `copy .env.example .env`)*
 
-6. **Deploy Your Application**
-   - Railway will automatically detect the Procfile and deploy using Gunicorn
-   - The deployment will use the Python version specified in runtime.txt
+**Required Variables (`.env`):**
+```ini
+# Flask Security
+SESSION_SECRET=your_super_secret_key_here
 
-7. **Access Your Application**
-   - Once deployed, click "Generate Domain" in the "Settings" tab
-   - Your application will be available at the generated domain
+# Database URI
+DATABASE_URL=sqlite:///visionfit.db
 
-## Local Development
+# Google Gemini API
+GOOGLE_API_KEY=your_google_gemini_api_key
 
-1. Copy `.env.example` to `.env` and fill in your environment variables
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the application: `python run.py`
+# Google Fit Configuration (Optional but recommended)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:5000/oauth2callback
+```
+
+### 5. Launch Local AI Inference (Ollama)
+For your Diet and Yoga AI generations to run locally without internet constraints:
+1. Download [Ollama](https://ollama.com/).
+2. Pull the designated model (Llama3 recommended):
+   ```bash
+   ollama pull llama3
+   ```
+   *The system is model-agnostic and will detect the ones you have locally automatically.*
+
+### 6. Run the Application
+
+You have multiple avenues to boot up VisionFit AI:
+
+- **Windows Auto-Boot:**
+  ```bash
+  run_visionfit.bat
+  ```
+- **Cross-Platform Launcher:**
+  ```bash
+  python start_app.py
+  ```
+- **Standard Flask Dev Server:**
+  ```bash
+  python app.py
+  ```
+
+Open your browser to:
+- **Main Platform:** `http://localhost:5000`
+- **Voice Agent:** `http://localhost:5000/voice-assistant`
+
+---
+
+## 🎙️ Standalone Sarvam AI Voice Interface (Optional)
+
+We also provide an independent Streamlit application focused rigorously on voice-native interactions leveraging **Sarvam AI**.
+
+1. Install auxiliary requirements:
+   ```bash
+   pip install -r requirements-voice-chatbot.txt
+   ```
+2. Make sure to define `SARVAM_API_KEY` in your `.env`.
+3. Launch Streamlit:
+   ```bash
+   streamlit run voice_chatbot_app.py
+   ```
+
+---
+
+## 📂 Project Architecture
+
+```text
+VisionFitAi/
+├── app.py                  # Core Application Factory
+├── routes.py               # Main Controllers & Blueprint definitions
+├── models.py               # SQLAlchemy Database schemas
+├── pose_detection.py       # OpenCV & MediaPipe pipeline logic
+├── gemini.py               # Google GenAI wrappers
+├── diet_service.py         # Ollama Local Diet Logic
+├── yoga_service.py         # Ollama Local Yoga Flows
+├── google_fit_service.py   # Synchronizations & OAuth flows
+├── voice_service.py        # Bilingual TTS/STT and routing
+├── start_app.py            # Orchestrator & Boot sequence 
+├── templates/              # Jinja2 HTML Views
+└── static/                 # Stylesheets, JS, Static Assets
+```
+
+---
+
+## 🤝 Contributing
+Open-source contributions are actively encouraged. Please fork the repository, cut a feature branch, and submit a detailed Pull Request.
+
+## 📄 License
+This platform is published under the [MIT License](LICENSE).

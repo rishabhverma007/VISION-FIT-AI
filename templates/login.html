@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Login - VisionFit AI{% endblock %}
@@ -24,7 +23,8 @@
                                 <span class="modern-input-icon">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input type="text" class="modern-input" id="username" name="username" placeholder="Enter your username" required>
+                                <input type="text" class="modern-input" id="username" name="username"
+                                    placeholder="Enter your username" required>
                             </div>
                         </div>
 
@@ -34,7 +34,8 @@
                                 <span class="modern-input-icon">
                                     <i class="fas fa-lock"></i>
                                 </span>
-                                <input type="password" class="modern-input" id="password" name="password" placeholder="Enter your password" required>
+                                <input type="password" class="modern-input" id="password" name="password"
+                                    placeholder="Enter your password" required>
                             </div>
                         </div>
 
@@ -47,7 +48,7 @@
 
                     <div class="text-center">
                         <p class="auth-link-text">
-                            Don't have an account? 
+                            Don't have an account?
                             <a href="{{ url_for('register') }}" class="auth-link">Sign up here</a>
                         </p>
                     </div>
@@ -83,241 +84,241 @@
 </div>
 
 <style>
-/* Modern Authentication Styles */
-.modern-auth-card {
-    background: rgba(15, 15, 35, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    border-radius: 20px;
-    box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.4),
-        0 0 30px rgba(102, 126, 234, 0.1);
-    transition: all 0.3s ease;
-}
-
-.modern-auth-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 
-        0 30px 60px rgba(0, 0, 0, 0.5),
-        0 0 50px rgba(102, 126, 234, 0.2);
-}
-
-.auth-icon-wrapper {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-}
-
-.auth-title {
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.auth-subtitle {
-    color: #bdc3c7;
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-.modern-label {
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.modern-input-group {
-    position: relative;
-    margin-bottom: 1rem;
-}
-
-.modern-input-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #bdc3c7;
-    z-index: 2;
-    font-size: 1rem;
-}
-
-.modern-input {
-    width: 100%;
-    padding: 1rem 1rem 1rem 3rem;
-    background: rgba(30, 41, 59, 0.8);
-    border: 2px solid rgba(102, 126, 234, 0.2);
-    border-radius: 12px;
-    color: #ffffff;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    outline: none;
-}
-
-.modern-input::placeholder {
-    color: rgba(189, 195, 199, 0.7);
-}
-
-.modern-input:focus {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-    transform: translateY(-2px);
-}
-
-.modern-input:focus + .modern-input-icon {
-    color: #667eea;
-}
-
-.modern-btn {
-    padding: 1rem 2rem;
-    border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.modern-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #ffffff;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-}
-
-.modern-btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-}
-
-.auth-link-text {
-    color: #bdc3c7;
-    margin-bottom: 0;
-    font-size: 0.95rem;
-}
-
-.auth-link {
-    color: #4facfe;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.3s ease;
-}
-
-.auth-link:hover {
-    color: #00f2fe;
-    text-decoration: underline;
-}
-
-.features-subtitle {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-}
-
-.feature-preview-card {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    border-radius: 12px;
-    padding: 1.5rem 1rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.feature-preview-card:hover {
-    background: rgba(30, 41, 59, 0.8);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-}
-
-.feature-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.feature-text {
-    color: #ffffff;
-    font-weight: 500;
-    font-size: 0.85rem;
-    display: block;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
+    /* Modern Authentication Styles */
     .modern-auth-card {
-        margin: 1rem;
+        background: rgba(15, 15, 35, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 20px;
+        box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.4),
+            0 0 30px rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
     }
-    
+
+    .modern-auth-card:hover {
+        transform: translateY(-5px);
+        box-shadow:
+            0 30px 60px rgba(0, 0, 0, 0.5),
+            0 0 50px rgba(102, 126, 234, 0.2);
+    }
+
+    .auth-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
     .auth-title {
-        font-size: 1.5rem;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
-    
+
+    .auth-subtitle {
+        color: #bdc3c7;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .modern-label {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .modern-input-group {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .modern-input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #bdc3c7;
+        z-index: 2;
+        font-size: 1rem;
+    }
+
+    .modern-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        background: rgba(30, 41, 59, 0.8);
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 12px;
+        color: #ffffff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .modern-input::placeholder {
+        color: rgba(189, 195, 199, 0.7);
+    }
+
+    .modern-input:focus {
+        background: rgba(30, 41, 59, 0.95);
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .modern-input:focus+.modern-input-icon {
+        color: #667eea;
+    }
+
+    .modern-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .modern-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+
+    .auth-link-text {
+        color: #bdc3c7;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .auth-link {
+        color: #4facfe;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .auth-link:hover {
+        color: #00f2fe;
+        text-decoration: underline;
+    }
+
+    .features-subtitle {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
     .feature-preview-card {
-        padding: 1rem 0.5rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
     }
-    
+
+    .feature-preview-card:hover {
+        background: rgba(30, 41, 59, 0.8);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
     .feature-icon {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
     }
-    
+
     .feature-text {
-        font-size: 0.75rem;
+        color: #ffffff;
+        font-weight: 500;
+        font-size: 0.85rem;
+        display: block;
     }
-}
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .modern-auth-card {
+            margin: 1rem;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+        }
+
+        .feature-preview-card {
+            padding: 1rem 0.5rem;
+        }
+
+        .feature-icon {
+            font-size: 1.2rem;
+        }
+
+        .feature-text {
+            font-size: 0.75rem;
+        }
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('input');
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input');
 
-    // Add focus animations
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('focused');
+        // Add focus animations
+        inputs.forEach(input => {
+            input.addEventListener('focus', function () {
+                this.parentElement.classList.add('focused');
+            });
+
+            input.addEventListener('blur', function () {
+                this.parentElement.classList.remove('focused');
+            });
         });
 
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('focused');
+        // Form submission animation
+        form.addEventListener('submit', function (e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+            submitBtn.disabled = true;
+        });
+
+        // Feature card animations
+        const featureCards = document.querySelectorAll('.feature-preview-card');
+        featureCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 500 + (index * 100));
         });
     });
-
-    // Form submission animation
-    form.addEventListener('submit', function(e) {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
-        submitBtn.disabled = true;
-    });
-
-    // Feature card animations
-    const featureCards = document.querySelectorAll('.feature-preview-card');
-    featureCards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, 500 + (index * 100));
-    });
-});
 </script>
 {% endblock %}

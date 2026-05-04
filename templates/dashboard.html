@@ -3,155 +3,248 @@
 {% block title %}Dashboard - VisionFit AI{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5 mt-5">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-lg-3 col-md-4 mb-4">
-            <div class="dashboard-card h-100">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="avatar-lg mx-auto mb-3" style="width: 100px; height: 100px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow);">
-                            <i class="fas fa-user text-white fa-3x"></i>
+<div class="dashboard-container mt-4">
+    <div class="dashboard-layout">
+
+        <!-- Left Sidebar Panel -->
+        <aside class="sidebar-panel">
+            <!-- User Profile -->
+            <div class="user-profile-section">
+                <div class="user-avatar-glow">
+                    <div class="user-avatar-inner">
+                        <i class="fas fa-user fa-3x text-white"></i>
+                    </div>
+                </div>
+                <h4 class="mb-1">{{ current_user.username }}</h4>
+                <p class="text-neon-cyan small mb-0">{{ current_user.fitness_level.title() }} Level</p>
+            </div>
+
+            <!-- Device Sync Section (Google Fit) -->
+            <div class="device-sync-mini">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary mb-0" style="letter-spacing: 1px; font-size: 0.8rem;">
+                        Health Sync</h6>
+                    <span id="googleFitStatus" class="badge bg-dark text-muted border border-secondary"
+                        style="font-size: 0.65rem;">
+                        {% if session.get('google_fit_token') %}
+                        <span class="text-success">● On</span>
+                        {% else %}
+                        <span>○ Off</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Not Connected State -->
+                <div id="googleFitConnect"
+                    class="text-center {% if session.get('google_fit_token') %}d-none{% endif %}">
+                    <div class="google-fit-icon mb-3">
+                        <i class="fab fa-google fa-2x text-white"></i>
+                        <i class="fas fa-heartbeat fa-lg text-danger position-absolute"
+                            style="margin-left: -10px; margin-top: 20px;"></i>
+                    </div>
+                    <a href="{{ url_for('authorize_google_fit') }}" class="btn btn-outline-light btn-sm w-100">
+                        <i class="fab fa-google me-2"></i>Connect
+                    </a>
+                </div>
+
+                <!-- Connected State (Metrics) -->
+                <div id="googleFitMetrics" class="{% if not session.get('google_fit_token') %}d-none{% endif %}">
+                    <!-- Heart Rate -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-danger me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);">
+                            <i class="fas fa-heartbeat text-danger"></i>
                         </div>
-                        <h5 class="mb-1 text-gradient">{{ current_user.username }}</h5>
-                        <small class="text-light">{{ current_user.fitness_level.title() }} Level</small>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Heart Rate</small>
+                            <span id="fitHeartRate" class="fw-bold text-white">--</span> <small
+                                class="text-white">bpm</small>
+                        </div>
                     </div>
 
-                    <div class="quick-stats">
-                        <div class="stat-item d-flex justify-content-between py-2">
-                            <span><i class="fas fa-utensils me-2" style="color: var(--accent);"></i>Food Logs</span>
-                            <strong>{{ recent_food_logs|length }}</strong>
+                    <!-- Steps -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-info me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(13, 202, 240, 0.2);">
+                            <i class="fas fa-shoe-prints text-info"></i>
+                        </div>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Steps Today</small>
+                            <span id="fitSteps" class="fw-bold text-white">--</span>
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <h6 class="mb-3">Quick Actions</h6>
-                        <div class="d-grid gap-2">
-                            <a href="{{ url_for('workout_planner') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-brain me-2"></i>AI Workout Plan
-                            </a>
-                            <a href="/food-analyzer" class="btn btn-accent btn-sm">
-                                <i class="fas fa-camera me-2"></i>Food Analysis
-                            </a>
-                            <a href="{{ url_for('exercise_analysis') }}" class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye me-2"></i>Form Analysis
-                            </a>
+                    <!-- Calories -->
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-warning me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);">
+                            <i class="fas fa-fire-alt text-warning"></i>
                         </div>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Active Cals</small>
+                            <span id="fitCalories" class="fw-bold text-white">--</span> <small
+                                class="text-white">kcal</small>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-2">
+                        <small class="text-secondary" style="font-size: 0.65rem;">Updated: <span id="fitLastUpdate">Just
+                                now</span></small>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="col-lg-9 col-md-8">
-            <!-- Welcome Section -->
+            <!-- Quick Actions -->
+            <div class="mt-auto">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('workout_planner') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-brain me-2"></i>AI Planner
+                    </a>
+                    <a href="{{ url_for('exercise_analysis') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-video me-2"></i>Form Analysis
+                    </a>
+                    <a href="{{ url_for('voice_assistant') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-microphone me-2"></i>Voice Assistant
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Welcome Header -->
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h1 class="display-5 fw-bold mb-2">Welcome back, <span class="text-gradient">{{
+                            current_user.username }}</span>!</h1>
+                    <p class="text-secondary mb-0">Here's your fitness progress and personalized AI recommendations.</p>
+                </div>
+                <div class="text-end d-none d-md-block">
+                    <h2 class="h4 mb-0 text-white" id="clock">00:00</h2>
+                    <small class="text-white" id="date">Date</small>
+                </div>
+            </div>
+
+            <!-- Neon Stat Cards -->
+            <div class="stats-grid">
+                <!-- Total Workouts (Purple) -->
+                <div class="stat-neon-card purple">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-dumbbell fa-lg text-neon-purple"></i>
+                        </div>
+                        <span class="badge bg-dark text-secondary rounded-pill border border-secondary">All Time</span>
+                    </div>
+                    <div class="stat-value" id="totalWorkoutsCard">{{ total_workouts }}</div>
+                    <div class="stat-label">Total Workouts</div>
+
+                    <!-- Decorative blur -->
+                    <div
+                        style="position: absolute; bottom: -20px; right: -20px; width: 100px; height: 100px; background: var(--secondary); filter: blur(60px); opacity: 0.2;">
+                    </div>
+                </div>
+
+                <!-- Calories Burned (Blue) -->
+                <div class="stat-neon-card blue">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-fire fa-lg text-primary"></i>
+                        </div>
+                        <span class="badge bg-dark text-primary rounded-pill border border-primary">Kcals</span>
+                    </div>
+                    <div class="stat-value" id="totalCaloriesCard">{{ total_calories_burned }}</div>
+                    <div class="stat-label">Calories Burned</div>
+
+                    <div
+                        style="position: absolute; bottom: -20px; right: -20px; width: 100px; height: 100px; background: #0072FF; filter: blur(60px); opacity: 0.2;">
+                    </div>
+                </div>
+
+                <!-- Avg Duration (Cyan) -->
+                <div class="stat-neon-card cyan">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock fa-lg text-info"></i>
+                        </div>
+                        <span class="badge bg-dark text-info rounded-pill border border-info">Avg Time</span>
+                    </div>
+                    <div class="stat-value" id="avgDurationCard">{{ avg_duration }}</div>
+                    <div class="stat-label">Avg Duration</div>
+
+                    <div
+                        style="position: absolute; bottom: -20px; right: -20px; width: 100px; height: 100px; background: var(--primary); filter: blur(60px); opacity: 0.2;">
+                    </div>
+                </div>
+
+                <!-- Streak (Purple) -->
+                <div class="stat-neon-card purple">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check fa-lg text-warning"></i>
+                        </div>
+                        <span class="badge bg-dark text-warning rounded-pill border border-warning">Streak</span>
+                    </div>
+                    <div class="stat-value" id="streakCard">{{ streak }}</div>
+                    <div class="stat-label">Day Streak</div>
+
+                    <div
+                        style="position: absolute; bottom: -20px; right: -20px; width: 100px; height: 100px; background: var(--warning); filter: blur(60px); opacity: 0.2;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Assistant feature card -->
             <div class="mb-4">
-                <h2 class="fw-bold text-gradient">Welcome back, {{ current_user.username }}!</h2>
-                <p class="text-light">Here's your fitness progress and personalized AI-powered recommendations.</p>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-dumbbell"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalWorkoutsCard">{{ total_workouts }}</h3>
-                            <p>Total Workouts</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: var(--gradient-accent);">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalCaloriesCard">{{ total_calories_burned }}</h3>
-                            <p>Calories Burned</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="avgDurationCard">{{ avg_duration }}</h3>
-                            <p>Avg Duration</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, var(--primary));">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="streakCard">{{ streak }}</h3>
-                            <p>Day Streak</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Row -->
-            <div class="row mb-4">
-                <div class="col-lg-8 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-chart-line me-2" style="color: var(--primary);"></i>Workout Progress</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="workoutChart" height="100"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2" style="color: var(--primary);"></i>Exercise Types</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="exerciseChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100 glass-card">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-robot me-2" style="color: var(--accent);"></i>AI Fitness Companion</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="chatMessages" class="chat-messages mb-3" style="height: 200px; overflow-y: auto;">
-                                <div class="alert alert-info mb-2">
-                                    <small><strong>VisionFit AI:</strong> Hi {{ current_user.username }}! I'm here to help with your fitness journey. Ask me about workouts, nutrition, or motivation tips!</small>
-                                </div>
+                <a href="{{ url_for('voice_assistant') }}" class="text-decoration-none">
+                    <div class="glass-card p-4 d-flex align-items-center justify-content-between border border-secondary rounded-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-info me-3"
+                                style="width: 56px; height: 56px; box-shadow: 0 0 15px rgba(13, 202, 240, 0.3);">
+                                <i class="fas fa-microphone fa-lg text-info"></i>
                             </div>
-                            <div class="input-group">
-                                <input type="text" id="chatInput" class="form-control" placeholder="Ask me about fitness...">
-                                <button class="btn btn-primary" id="sendChat">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
+                            <div>
+                                <h5 class="text-white mb-1">Bilingual Voice Assistant</h5>
+                                <p class="text-secondary small mb-0">Speak in Hindi or English on the same app. Local AI, no paid APIs.</p>
                             </div>
                         </div>
+                        <i class="fas fa-chevron-right text-neon-cyan"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Main Chart -->
+                <div class="chart-box">
+                    <h5 class="mb-4"><i class="fas fa-chart-line me-2 text-primary"></i>Workout Progress</h5>
+                    <div style="height: 300px;">
+                        <canvas id="workoutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Pie Chart -->
+                <div class="chart-box">
+                    <h5 class="mb-4"><i class="fas fa-chart-pie me-2 text-secondary"></i>Exercise Types</h5>
+                    <div style="height: 300px;">
+                        <canvas id="exerciseChart"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
+
+        </main>
     </div>
 </div>
+
+<script>
+    // Simple clock script for the dashboard
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('date').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+</script>
 {% endblock %}
 
 {% block scripts %}
