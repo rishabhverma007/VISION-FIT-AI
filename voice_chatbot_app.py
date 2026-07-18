@@ -2,7 +2,7 @@
 Bilingual (Hindi/English) Voice Chatbot using Sarvam AI.
 
 - Speech-to-text: Sarvam Speech-to-Text REST API (saaras:v3)
-- Chat: Sarvam Chat Completions API (sarvam-m)
+- Chat: Sarvam Chat Completions API (sarvam-30b)
 - Text-to-speech: Sarvam Text-to-Speech REST API (bulbul:v3)
 
 Run: streamlit run voice_chatbot_app.py
@@ -28,7 +28,7 @@ SARVAM_CHAT_URL = "https://api.sarvam.ai/v1/chat/completions"
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 
 SARVAM_STT_MODEL = "saaras:v3"
-SARVAM_CHAT_MODEL = "sarvam-m"
+SARVAM_CHAT_MODEL = "sarvam-30b"
 SARVAM_TTS_MODEL = "bulbul:v3"
 
 SYSTEM_PROMPT = """You are a helpful bilingual assistant. If the user speaks Hindi, reply in Hindi (Devanagari script). If the user speaks English, reply in English. Keep answers concise and conversational."""
@@ -89,7 +89,7 @@ def _transcribe_audio(audio_bytes: bytes) -> Tuple[str, str]:
 
 
 def _chat_with_sarvam(messages: list) -> str:
-    """Call Sarvam chat completions (sarvam-m) and return the reply."""
+    """Call Sarvam chat completions (sarvam-30b) and return the reply."""
     headers = {
         "api-subscription-key": _get_sarvam_api_key(),
         "Content-Type": "application/json",
@@ -285,7 +285,7 @@ def main():
             st.session_state["messages"] = []
             st.rerun()
         st.markdown("---")
-        st.markdown("**Tech:** Sarvam Speech-to-Text • Sarvam Chat (sarvam-m) • Sarvam Text-to-Speech (bulbul:v3)")
+        st.markdown("**Tech:** Sarvam Speech-to-Text • Sarvam Chat (sarvam-30b) • Sarvam Text-to-Speech (bulbul:v3)")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ Bilingual (Hindi/English) voice chatbot backend using Sarvam AI.
 
 Used by the Flask app voice assistant routes. Provides:
 - Speech-to-text (Sarvam Speech-to-Text REST API)
-- Chat completion (Sarvam Chat Completions API, model sarvam-m)
+- Chat completion (Sarvam Chat Completions API, model sarvam-30b)
 - Text-to-speech (Sarvam Text-to-Speech REST API, bulbul:v3)
 
 The assistant is bilingual:
@@ -30,7 +30,7 @@ SARVAM_CHAT_URL = "https://api.sarvam.ai/v1/chat/completions"
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 
 SARVAM_STT_MODEL = "saaras:v3"
-SARVAM_CHAT_MODEL = "sarvam-m"
+SARVAM_CHAT_MODEL = "sarvam-30b"
 SARVAM_TTS_MODEL = "bulbul:v3"
 
 # Voice assistant system role: optimized for TTS, Hindi/English/Hinglish, no markdown
@@ -147,7 +147,7 @@ def transcribe(audio_bytes: bytes) -> Tuple[str, str]:
 
 def ollama_chat(messages: List[Dict[str, str]]) -> str:
     """
-    Chat completion using Sarvam Chat Completions API (sarvam-m).
+    Chat completion using Sarvam Chat Completions API (sarvam-30b).
 
     The function name is kept for backwards compatibility with existing routes.
     """

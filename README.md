@@ -182,7 +182,7 @@ We also provide an independent Streamlit application focused rigorously on voice
 
 ```text
 VisionFitAi/
-├── app.py                  # Core Application Factory
+├── app.py                  # Core Application Factory (includes Ollama auto-starter)
 ├── routes.py               # Main Controllers & Blueprint definitions
 ├── models.py               # SQLAlchemy Database schemas
 ├── pose_detection.py       # OpenCV & MediaPipe pipeline logic
@@ -194,6 +194,110 @@ VisionFitAi/
 ├── start_app.py            # Orchestrator & Boot sequence 
 ├── templates/              # Jinja2 HTML Views
 └── static/                 # Stylesheets, JS, Static Assets
+```
+
+---
+
+## 📊 System Architecture & Application Flow
+
+To help you understand how **VisionFit AI** bridges real-time computer vision, local/cloud AI services, and database persistence, here is the architectural blueprint:
+
+### ⚙️ System Architecture
+
+```mermaid
+graph TD
+    %% Styling
+    classDef client fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef server fill:#efebe9,stroke:#5d4037,stroke-width:2px;
+    classDef localAI fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef cloud fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    classDef db fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    %% Client Layer
+    User([User / Athlete]) -->|Interacts| Browser[Web Browser]
+    Browser -->|Webcam Video stream| MP[MediaPipe Pose JS]
+    Browser -->|Visualizations| ChartJS[Chart.js Dashboard]
+
+    %% Server Layer (Flask)
+    Browser <-->|HTTP / WebSockets| Flask[Flask Backend Server]
+    Flask -->|Database Operations| DB[(SQLite / PostgreSQL)]
+    
+    %% Local AI Layer (Ollama)
+    Flask <-->|Local AI Prompting| Ollama[Ollama Server]
+    subgraph Local LLM Models
+        Ollama -->|Llama 3 / Mistral| Diet[diet_service.py]
+        Ollama -->|Llama 3 / Mistral| Yoga[yoga_service.py]
+    end
+
+    %% Cloud Service Integrations
+    Flask <-->|Gemini API| Gemini[Google Gemini Cloud AI]
+    Flask <-->|Sarvam AI API| Sarvam[Sarvam AI Bilingual Voice API]
+    Flask <-->|OAuth & Fit REST API| GoogleFit[Google Fit Platform]
+
+    %% Standalone Voice Agent
+    Streamlit[Streamlit Standalone Voice App] <-->|Bilingual Audio| Sarvam
+
+    %% Apply Classes
+    class Browser,MP,ChartJS client;
+    class Flask,Streamlit server;
+    class Ollama,Diet,Yoga localAI;
+    class Gemini,Sarvam,GoogleFit cloud;
+    class DB db;
+```
+
+### 🔄 Application Workflow Flowchart
+
+Below is the user flow for key system operations, illustrating decision trees for Form Analysis, AI Generation, Voice Assistant, and Google Fit Sync:
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef process fill:#e1f5fe,stroke:#0288d1,stroke-width:1px;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:1px;
+    classDef startEnd fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    Start([User opens VisionFit AI]) --> Login{Already Registered?}
+    Login -->|No| Register[Register User Profile] --> SetupProfile[Set Preferences & Credentials]
+    Login -->|Yes| Dashboard[User Dashboard]
+
+    %% Flow choices
+    Dashboard --> Choice{Select Feature}
+    
+    %% Choice 1: Pose Detection
+    Choice -->|Pose Detection & Form Analysis| CV[Webcam Live Stream]
+    CV --> MediaPipe[Track 33 Body Landmarks]
+    MediaPipe --> Analysis[Analyze Angle & Posture in pose_detection.py]
+    Analysis --> Valid{Is Form Correct?}
+    Valid -->|Yes| Count[Increment Rep Count & Visual Queue]
+    Valid -->|No| Audio[Play Audio/Text Feedback e.g., 'Straighten back']
+    Count --> CV
+    Audio --> CV
+    
+    %% Choice 2: Workout Planner
+    Choice -->|AI Workout Planner| WorkoutForm[Enter Fitness Profile & Goals]
+    WorkoutForm --> GeminiReq[Generate Gemini 1.5 Prompt]
+    GeminiReq --> GeminiResp[Receive Adaptive 4-Week Schedule]
+    GeminiResp --> SaveWorkout[Display & Save to Dashboard]
+    
+    %% Choice 3: Diet & Yoga Planners
+    Choice -->|Local Diet & Yoga Planners| LocalForm[Enter Diet Prefs / Yoga Mood]
+    LocalForm --> OllamaReq[Query Local LLM via Ollama Llama 3]
+    OllamaReq --> OllamaResp[Generate Privacy-First Meal Plan / Flow]
+    OllamaResp --> DisplayLocal[Display Result with SVG Graphics]
+
+    %% Choice 4: Voice Assistant
+    Choice -->|Bilingual Voice Assistant| VoiceMic[Record Hindi/English Audio]
+    VoiceMic --> SarvamSTT[Sarvam Speech-to-Text]
+    SarvamSTT --> LLMChat[Sarvam Chat sarvam-30b / Ollama Chat]
+    LLMChat --> SarvamTTS[Sarvam Text-to-Speech]
+    SarvamTTS --> PlayAudio[Play Synthesized Voice Response]
+
+    %% Choice 5: Google Fit Sync
+    Choice -->|Google Fit Sync| OAuthReq[Authorize Google Fit Sync]
+    OAuthReq --> FetchFit[Fetch Calorie Burn & Activity Data]
+    FetchFit --> PlotCharts[Update Dashboard Streaks and Charts]
+    
+    class Start startEnd;
 ```
 
 ---

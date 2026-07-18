@@ -16,7 +16,7 @@ numpy==1.25.2
 # Google Gemini API
 google-genai
 ollama>=0.3.0
-pydantic==2.6.1
+pydantic>=2.6.1
 psycopg2-binary
 sqlalchemy
 google-auth

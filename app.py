@@ -7,14 +7,59 @@ from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
 # Load environment variables
 load_dotenv()
 
+# Automatically check and start Ollama for local model execution
+def check_and_start_ollama():
+    try:
+        import requests
+    except ImportError:
+        logging.warning("requests module not found. Cannot auto-check Ollama status.")
+        return
+
+    import subprocess
+    import sys
+    import time
+
+    def is_ollama_running():
+        try:
+            r = requests.get("http://localhost:11434", timeout=1)
+            return r.status_code == 200
+        except Exception:
+            return False
+
+    if is_ollama_running():
+        logging.info("Ollama is already running.")
+        return
+
+    logging.info("Ollama is not running. Starting Ollama...")
+    try:
+        if sys.platform == "win32":
+            subprocess.Popen(["ollama", "serve"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        else:
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        logging.info("Waiting for Ollama to start...")
+        for _ in range(15):  # Wait up to 15 seconds
+            if is_ollama_running():
+                logging.info("Ollama started successfully.")
+                return
+            time.sleep(1)
+        logging.warning("Timed out waiting for Ollama to start.")
+    except FileNotFoundError:
+        logging.warning("Ollama executable ('ollama') was not found in the PATH. "
+                        "Please install Ollama (https://ollama.com) to run local models.")
+    except Exception as e:
+        logging.warning(f"Failed to start Ollama: {e}")
+
+check_and_start_ollama()
+
 # Import extensions
 from extensions import db, login_manager
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
 def create_app():
     # Create the app
