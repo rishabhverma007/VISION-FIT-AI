@@ -1,29 +1,32 @@
 # VisionFit AI 🏋️‍♂️🥗🧘‍♀️
 
 <div align="center">
-  <p><strong>Your Personal, AI-Powered Digital AI Health & Fitness Coach.</strong></p>
+  <p><strong>Your Personal, AI-Powered Digital Health & Fitness Coach.</strong></p>
   
-  ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+  ![Python](https://img.shields.io/badge/python-3.11+-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
   ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
   ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
+  ![MediaPipe](https://img.shields.io/badge/mediapipe-009688?style=for-the-badge&logo=google&logoColor=white)
   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
-  ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
   ![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)
+  ![Ollama](https://img.shields.io/badge/ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 </div>
 
 <br/>
 
-**VisionFit AI** is a comprehensive health and fitness platform that bridges the gap between state-of-the-art computer vision and advanced Generative AI (Google Gemini & Local LLMs via Ollama) to bring you a hyper-personalized fitness experience. Unlike standard fitness apps, VisionFit AI observes your form, plans your meals, curates your yoga flows, and coaches you locally in multiple languages.
+**VisionFit AI** is a comprehensive health and fitness platform that bridges state-of-the-art computer vision with advanced AI (Google Gemini & Local LLMs via Ollama) to deliver a hyper-personalized fitness experience. Unlike standard fitness apps, VisionFit AI observes your form, plans your meals, curates your yoga flows, and coaches you locally in multiple languages.
 
 ---
 
 ## 📸 Project Showcase
 
-*(Replace the placeholder links with actual screenshots of your application)*
-
-| Dashboard & Tracking | Pose Detection (Live) | Workout AI Generation |
+| Landing Page | Dashboard | Voice Assistant |
 | :---: | :---: | :---: |
-| <img src="https://via.placeholder.com/400x250.png?text=Dashboard+Screenshot" alt="Dashboard" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Pose+Detection" alt="Pose Detection" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Workout+Planner" alt="Planner" width="100%"> |
+| <img src="https://via.placeholder.com/400x250.png?text=Landing+Page" alt="Landing Page" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Dashboard" alt="Dashboard" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Voice+Assistant" alt="Voice Assistant" width="100%"> |
+
+| Pose Detection | AI Workout Planner | Diet & Yoga |
+| :---: | :---: | :---: |
+| <img src="https://via.placeholder.com/400x250.png?text=Pose+Detection" alt="Pose Detection" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Workout+Planner" alt="Workout Planner" width="100%"> | <img src="https://via.placeholder.com/400x250.png?text=Diet+and+Yoga" alt="Diet and Yoga" width="100%"> |
 
 ---
 
@@ -31,34 +34,34 @@
 
 ### 1. 📹 Real-Time Pose Detection & Form Analysis
 - **Powered by:** MediaPipe & OpenCV
-- **Functionality:** Tracks 33 body landmarks in real-time continuously via your webcam.
+- **Functionality:** Tracks 33 body landmarks in real-time via your webcam.
 - **Capabilities:**
   - **Pushups:** Scrutinizes depth, arm angle, and back posture.
-  - **Squats:** Monitors hip-knee alignments and squat depth.
+  - **Squats:** Monitors hip-knee alignment and squat depth.
   - **Jumping Jacks:** Inspects coordination and range of motion.
-- **Feedback Loop:** Reps are only counted if the form is correct. The system delivers instant visual and audio queues (e.g., "Keep your back straight").
+- **Feedback Loop:** Reps are only counted with correct form. Delivers instant visual and audio cues (e.g., "Keep your back straight").
 
 ### 2. 🤖 AI Workout Planner
-- **Powered by:** Google Gemini (1.5 Pro / Flash)
-- **Functionality:** Dissects your fitness profile (current levels, equipment, goals, physical limitations) to formulate adaptive 4-week workout regimes.
+- **Powered by:** Google Gemini (2.0 Flash)
+- **Functionality:** Generates adaptive 4-week workout plans based on your fitness profile, equipment, goals, and physical limitations.
 
-### 3. 🍎 AI Diet Planner (Offline/Local Priority)
-- **Powered by:** Local LLMs via **Ollama** (Llama 3, Mistral) with Cloud fallbacks.
-- **Functionality:** Synthesizes 1-day meal plans broken down by caloric and macronutrient targets. It fully accommodates dietary restrictions (Paleo, Vegan, Keto, etc.).
-- **Privacy First:** Data stays on your machine during inference.
+### 3. 🍎 AI Diet Planner (Privacy-First)
+- **Powered by:** Local LLMs via **Ollama** (Llama 3.2, Qwen 2.5, Mistral) with cloud fallback.
+- **Functionality:** Synthesizes personalized meal plans with caloric and macronutrient breakdowns. Supports dietary restrictions (Paleo, Vegan, Keto, etc.).
+- **Privacy:** Data stays on your machine during inference.
 
 ### 4. 🧘 AI Yoga Instructor
 - **Powered by:** Local LLMs via **Ollama**.
-- **Functionality:** Composes custom Yoga flows corresponding to your emotional state (stress, energy), core goals, and physical mobility ("Chair Yoga", "Bed Yoga"). Includes SVG graphics for standard poses.
+- **Functionality:** Creates custom yoga flows based on your emotional state, goals, and mobility level. Includes chair yoga, bed yoga, and other accessibility-focused routines with SVG pose graphics.
 
-### 5. 🎤 Bilingual AI Fitness Chat & Voice Assistant
-- **Powered by:** Google Gemini & Local LLMs + `langdetect`.
-- **Functionality:** In-app real-time conversational interface mapping both **Hindi** and **English**. Talk to your digital coach as naturally as a human without needing third-party cloud APIs.
-- **Bonus:** Standalone Streamlit integration with **Sarvam AI** for advanced regional voice support.
+### 5. 🎤 Bilingual Voice Assistant
+- **Powered by:** Google Gemini & Local LLMs with `langdetect`.
+- **Functionality:** Real-time conversational fitness coach supporting both **Hindi** and **English**. Uses streaming responses for a natural feel.
+- **Features:** Voice recording with real-time transcription, text input fallback, chat history, and clear/reset functionality.
 
-### 6. 📊 Intuitive Dashboard & Google Fit Sync
-- **Capabilities:** Interactive Chart.js data visualizations for your workout streaks, calorie burns, and performance history.
-- **Third-Party Sync:** Deep linking with Google Fit API for automated physical activity ingestion.
+### 6. 📊 Dashboard & Google Fit Sync
+- **Capabilities:** Interactive Chart.js visualizations for workout streaks, calorie burns, and performance history.
+- **Third-Party Sync:** Google Fit API integration for automated activity data ingestion.
 
 ---
 
@@ -66,31 +69,34 @@
 
 | Layer | Technologies |
 | --- | --- |
-| **Backend Framework** | Flask, Python 3.8+, Flask-Login, Flask-Session |
+| **Backend Framework** | Flask 2.3, Python 3.11+, Flask-Login, Flask-Session |
 | **Database** | SQLite (Dev), PostgreSQL (Prod) via SQLAlchemy |
-| **Frontend** | HTML5, CSS (Bootstrap 5), Vanilla Javascript, Chart.js |
+| **Frontend** | HTML5, CSS3 (Bootstrap 5), Vanilla JavaScript, Chart.js |
 | **Computer Vision** | OpenCV, Google MediaPipe, Pillow, NumPy |
-| **Cloud AI Models** | Google GenAI API (Gemini Series) |
-| **Local AI Models** | Ollama (Llama 3, Mistral, Gemma, etc.) |
-| **Integrations** | Google Auth OAuthlib, Google Fit REST API, Sarvam AI |
+| **Cloud AI** | Google GenAI API (Gemini 2.0 Flash) |
+| **Local AI** | Ollama (Llama 3.2, Qwen 2.5 VL, Nomic Embed) |
+| **Integrations** | Google Auth OAuthlib, Google Fit REST API |
 
 ---
 
 ## ⚙️ Installation & Setup
 
 ### Prerequisites
-- Python 3.8+
-- Webcam for Pose Detection
-- [Ollama](https://ollama.com/) *(Optional: Required for privacy-first, local offline features)*
-- Google Cloud Project with Gemini API and Fit API enabled.
+
+- Python 3.11+
+- Webcam (for Pose Detection)
+- [Ollama](https://ollama.com/) *(Optional: Required for local Diet, Yoga, and Voice features)*
+- Google Cloud Project with Gemini API enabled *(Optional: For AI Workout Planner and Gemini-powered features)*
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/yourusername/VisionFitAi.git
 cd VisionFitAi
 ```
 
 ### 2. Set Up Virtual Environment
+
 ```bash
 # Windows
 python -m venv .venv
@@ -102,208 +108,219 @@ source .venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables
+
 Create a `.env` file in the root directory by copying the example template:
+
 ```bash
+# Windows
+copy .env.example .env
+
+# macOS/Linux
 cp .env.example .env
 ```
-*(If on Windows use `copy .env.example .env`)*
 
-**Required Variables (`.env`):**
+Edit `.env` with your settings:
+
 ```ini
 # Flask Security
 SESSION_SECRET=your_super_secret_key_here
 
-# Database URI
+# Database URI (SQLite for local dev)
 DATABASE_URL=sqlite:///visionfit.db
 
-# Google Gemini API
+# Google Gemini API Key (Required for AI features)
 GOOGLE_API_KEY=your_google_gemini_api_key
 
-# Google Fit Configuration (Optional but recommended)
+# Google Fit Configuration (Optional)
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
 GOOGLE_REDIRECT_URI=http://localhost:5000/oauth2callback
+
+# Port Configuration
+PORT=5000
 ```
 
-### 5. Launch Local AI Inference (Ollama)
-For your Diet and Yoga AI generations to run locally without internet constraints:
-1. Download [Ollama](https://ollama.com/).
-2. Pull the designated model (Llama3 recommended):
-   ```bash
-   ollama pull llama3
-   ```
-   *The system is model-agnostic and will detect the ones you have locally automatically.*
+### 5. Set Up Ollama (Optional - Recommended)
+
+For local, privacy-first AI features (Diet, Yoga, Voice):
+
+1. Download and install [Ollama](https://ollama.com/)
+2. Pull the recommended models:
+
+```bash
+ollama pull llama3.2
+ollama pull qwen2.5vl:7b
+```
+
+> The system is model-agnostic and will auto-detect available local models.
 
 ### 6. Run the Application
 
-You have multiple avenues to boot up VisionFit AI:
+```bash
+# Standard Flask Dev Server
+python app.py
 
-- **Windows Auto-Boot:**
-  ```bash
-  run_visionfit.bat
-  ```
-- **Cross-Platform Launcher:**
-  ```bash
-  python start_app.py
-  ```
-- **Standard Flask Dev Server:**
-  ```bash
-  python app.py
-  ```
+# Or using the orchestrator (auto-starts Ollama)
+python start_app.py
+```
 
 Open your browser to:
-- **Main Platform:** `http://localhost:5000`
-- **Voice Agent:** `http://localhost:5000/voice-assistant`
+
+- **Main Platform:** [http://localhost:5000](http://localhost:5000)
+- **Voice Assistant:** [http://localhost:5000/voice-assistant](http://localhost:5000/voice-assistant)
 
 ---
 
-## 🎙️ Standalone Sarvam AI Voice Interface (Optional)
+## 📂 Project Structure
 
-We also provide an independent Streamlit application focused rigorously on voice-native interactions leveraging **Sarvam AI**.
-
-1. Install auxiliary requirements:
-   ```bash
-   pip install -r requirements-voice-chatbot.txt
-   ```
-2. Make sure to define `SARVAM_API_KEY` in your `.env`.
-3. Launch Streamlit:
-   ```bash
-   streamlit run voice_chatbot_app.py
-   ```
-
----
-
-## 📂 Project Architecture
-
-```text
+```
 VisionFitAi/
-├── app.py                  # Core Application Factory (includes Ollama auto-starter)
-├── routes.py               # Main Controllers & Blueprint definitions
-├── models.py               # SQLAlchemy Database schemas
-├── pose_detection.py       # OpenCV & MediaPipe pipeline logic
-├── gemini.py               # Google GenAI wrappers
-├── diet_service.py         # Ollama Local Diet Logic
-├── yoga_service.py         # Ollama Local Yoga Flows
-├── google_fit_service.py   # Synchronizations & OAuth flows
-├── voice_service.py        # Bilingual TTS/STT and routing
-├── start_app.py            # Orchestrator & Boot sequence 
-├── templates/              # Jinja2 HTML Views
-└── static/                 # Stylesheets, JS, Static Assets
+├── app.py                  # Core Application Factory (auto-starts Ollama)
+├── routes.py               # All route handlers & API endpoints
+├── models.py               # SQLAlchemy database models (User, Workout)
+├── extensions.py           # Flask extension instances (db, login_manager)
+├── pose_detection.py       # OpenCV & MediaPipe pose analysis
+├── gemini.py               # Google Gemini AI wrappers
+├── diet_service.py         # Ollama-powered diet plan generation
+├── yoga_service.py         # Ollama-powered yoga flow generation
+├── voice_service.py        # Bilingual voice chatbot (STT/TTS/LLM)
+├── google_fit_service.py   # Google Fit OAuth & data sync
+├── start_app.py            # Orchestrator (Ollama + Flask launcher)
+├── run.py                  # Production entry point (gunicorn-compatible)
+├── templates/              # Jinja2 HTML templates
+│   ├── base.html           #   Base layout with navigation
+│   ├── index.html          #   Landing page
+│   ├── login.html          #   User login
+│   ├── register.html       #   User registration
+│   ├── dashboard.html      #   User dashboard
+│   ├── workout_planner.html#   AI workout plan generation
+│   ├── exercise_analysis.html#  Real-time pose detection
+│   ├── voice_assistant.html#   Bilingual voice chatbot
+│   ├── yoga.html           #   AI yoga flow generator
+│   └── diet.html           #   AI diet plan generator
+├── static/
+│   ├── css/style.css       # Global styles
+│   ├── js/main.js          # Client-side JavaScript
+│   └── yoga_images/        # Yoga pose reference images
+├── requirements.txt        # Python dependencies
+├── pyproject.toml          # Project metadata
+├── .env.example            # Environment variable template
+└── Procfile                # Deployment configuration
 ```
 
 ---
 
-## 📊 System Architecture & Application Flow
-
-To help you understand how **VisionFit AI** bridges real-time computer vision, local/cloud AI services, and database persistence, here is the architectural blueprint:
-
-### ⚙️ System Architecture
+## 📊 System Architecture
 
 ```mermaid
 graph TD
-    %% Styling
     classDef client fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
     classDef server fill:#efebe9,stroke:#5d4037,stroke-width:2px;
     classDef localAI fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
     classDef cloud fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
     classDef db fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
-    %% Client Layer
     User([User / Athlete]) -->|Interacts| Browser[Web Browser]
-    Browser -->|Webcam Video stream| MP[MediaPipe Pose JS]
+    Browser -->|Webcam Video| MP[MediaPipe Pose JS]
     Browser -->|Visualizations| ChartJS[Chart.js Dashboard]
 
-    %% Server Layer (Flask)
-    Browser <-->|HTTP / WebSockets| Flask[Flask Backend Server]
-    Flask -->|Database Operations| DB[(SQLite / PostgreSQL)]
-    
-    %% Local AI Layer (Ollama)
-    Flask <-->|Local AI Prompting| Ollama[Ollama Server]
-    subgraph Local LLM Models
-        Ollama -->|Llama 3 / Mistral| Diet[diet_service.py]
-        Ollama -->|Llama 3 / Mistral| Yoga[yoga_service.py]
+    Browser <-->|HTTP| Flask[Flask Backend]
+    Flask -->|ORM| DB[(SQLite / PostgreSQL)]
+
+    Flask <-->|Local AI| Ollama[Ollama Server]
+    subgraph Local LLMs
+        Ollama --> Diet[diet_service.py]
+        Ollama --> Yoga[yoga_service.py]
+        Ollama --> Voice[voice_service.py]
     end
 
-    %% Cloud Service Integrations
-    Flask <-->|Gemini API| Gemini[Google Gemini Cloud AI]
-    Flask <-->|Sarvam AI API| Sarvam[Sarvam AI Bilingual Voice API]
-    Flask <-->|OAuth & Fit REST API| GoogleFit[Google Fit Platform]
+    Flask <-->|Cloud AI| Gemini[Google Gemini Cloud]
+    Flask <-->|OAuth + REST| GoogleFit[Google Fit]
 
-    %% Standalone Voice Agent
-    Streamlit[Streamlit Standalone Voice App] <-->|Bilingual Audio| Sarvam
-
-    %% Apply Classes
     class Browser,MP,ChartJS client;
-    class Flask,Streamlit server;
-    class Ollama,Diet,Yoga localAI;
-    class Gemini,Sarvam,GoogleFit cloud;
+    class Flask server;
+    class Ollama,Diet,Yoga,Voice localAI;
+    class Gemini,GoogleFit cloud;
     class DB db;
 ```
 
-### 🔄 Application Workflow Flowchart
+---
 
-Below is the user flow for key system operations, illustrating decision trees for Form Analysis, AI Generation, Voice Assistant, and Google Fit Sync:
+## 🔌 API Endpoints
 
-```mermaid
-flowchart TD
-    %% Styling
-    classDef process fill:#e1f5fe,stroke:#0288d1,stroke-width:1px;
-    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:1px;
-    classDef startEnd fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Landing page |
+| `/register` | GET/POST | User registration |
+| `/login` | GET/POST | User login |
+| `/logout` | GET | User logout |
+| `/dashboard` | GET | User dashboard |
+| `/workout_planner` | GET/POST | AI workout planner |
+| `/exercise-analysis` | GET | Real-time pose detection |
+| `/yoga` | GET | AI yoga flow generator |
+| `/diet` | GET | AI diet plan generator |
+| `/voice-assistant` | GET | Bilingual voice chatbot |
+| `/authorize/google-fit` | GET | Google Fit OAuth flow |
+| `/oauth2callback` | GET | Google Fit OAuth callback |
+| `/api/analyze-pose` | POST | Pose analysis API |
+| `/api/voice/process` | POST | Voice processing (streaming) |
+| `/api/voice/process_text` | POST | Text-based voice chat |
+| `/api/generate-yoga-plan` | POST | Generate yoga plan |
+| `/api/generate-diet-plan` | POST | Generate diet plan |
+| `/api/fitness-chat` | POST | AI fitness Q&A |
+| `/api/google-fit-data` | GET | Fetch Google Fit data |
+| `/api/dashboard-stats` | GET | Dashboard statistics |
+| `/api/health-check` | GET | Health check endpoint |
 
-    Start([User opens VisionFit AI]) --> Login{Already Registered?}
-    Login -->|No| Register[Register User Profile] --> SetupProfile[Set Preferences & Credentials]
-    Login -->|Yes| Dashboard[User Dashboard]
+---
 
-    %% Flow choices
-    Dashboard --> Choice{Select Feature}
-    
-    %% Choice 1: Pose Detection
-    Choice -->|Pose Detection & Form Analysis| CV[Webcam Live Stream]
-    CV --> MediaPipe[Track 33 Body Landmarks]
-    MediaPipe --> Analysis[Analyze Angle & Posture in pose_detection.py]
-    Analysis --> Valid{Is Form Correct?}
-    Valid -->|Yes| Count[Increment Rep Count & Visual Queue]
-    Valid -->|No| Audio[Play Audio/Text Feedback e.g., 'Straighten back']
-    Count --> CV
-    Audio --> CV
-    
-    %% Choice 2: Workout Planner
-    Choice -->|AI Workout Planner| WorkoutForm[Enter Fitness Profile & Goals]
-    WorkoutForm --> GeminiReq[Generate Gemini 1.5 Prompt]
-    GeminiReq --> GeminiResp[Receive Adaptive 4-Week Schedule]
-    GeminiResp --> SaveWorkout[Display & Save to Dashboard]
-    
-    %% Choice 3: Diet & Yoga Planners
-    Choice -->|Local Diet & Yoga Planners| LocalForm[Enter Diet Prefs / Yoga Mood]
-    LocalForm --> OllamaReq[Query Local LLM via Ollama Llama 3]
-    OllamaReq --> OllamaResp[Generate Privacy-First Meal Plan / Flow]
-    OllamaResp --> DisplayLocal[Display Result with SVG Graphics]
+## 🌐 Deployment
 
-    %% Choice 4: Voice Assistant
-    Choice -->|Bilingual Voice Assistant| VoiceMic[Record Hindi/English Audio]
-    VoiceMic --> SarvamSTT[Sarvam Speech-to-Text]
-    SarvamSTT --> LLMChat[Sarvam Chat sarvam-30b / Ollama Chat]
-    LLMChat --> SarvamTTS[Sarvam Text-to-Speech]
-    SarvamTTS --> PlayAudio[Play Synthesized Voice Response]
+### Heroku / Railway
 
-    %% Choice 5: Google Fit Sync
-    Choice -->|Google Fit Sync| OAuthReq[Authorize Google Fit Sync]
-    OAuthReq --> FetchFit[Fetch Calorie Burn & Activity Data]
-    FetchFit --> PlotCharts[Update Dashboard Streaks and Charts]
-    
-    class Start startEnd;
+The project includes a `Procfile` for Heroku-compatible deployments:
+
+```
+web: gunicorn run:app
+```
+
+For Railway, set the `DATABASE_URL` environment variable to your PostgreSQL connection string. The app automatically handles `postgres://` → `postgresql://` URL conversion.
+
+### Environment Variables for Production
+
+```ini
+SESSION_SECRET=your_production_secret
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+GOOGLE_API_KEY=your_key
+PORT=5000
 ```
 
 ---
 
 ## 🤝 Contributing
-Open-source contributions are actively encouraged. Please fork the repository, cut a feature branch, and submit a detailed Pull Request.
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
 
 ## 📄 License
-This platform is published under the [MIT License](LICENSE).
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ using Flask, MediaPipe, Google Gemini, and Ollama</p>
+</div>
