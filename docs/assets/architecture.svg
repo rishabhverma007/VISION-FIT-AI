@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 840" width="1240" height="840" role="img" aria-label="VisionFit AI system architecture">
+  <title>VisionFit AI — system architecture</title>
+  <defs>
+    <linearGradient id="archBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050510"/>
+      <stop offset="100%" stop-color="#0b0518"/>
+    </linearGradient>
+    <marker id="archArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8898AA"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="840" fill="url(#archBg)"/>
+  <rect x="0.5" y="0.5" width="1239" height="839" fill="none" stroke="#1d2b4d"/>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="40" y="46" font-size="26" font-weight="700" fill="#FFFFFF">VisionFit AI — System Architecture</text>
+    <text x="40" y="72" font-size="14" fill="#8898AA">One Flask monolith serves the UI, the JSON APIs, the AI orchestration and the OAuth flows.</text>
+
+    <!-- Band 1: client -->
+    <text x="40" y="110" font-size="14" font-weight="700" fill="#00C6FF">1 · BROWSER / CLIENT</text>
+    <rect x="40" y="120" width="1160" height="148" rx="18" fill="#0E0E1B" stroke="#00C6FF" stroke-opacity="0.28"/>
+    <g fill="#FFFFFF" font-size="15" font-weight="600">
+      <text x="76" y="160">Jinja2 templates</text>
+      <text x="361" y="160">static/js (vanilla JS)</text>
+      <text x="646" y="160">MediaPipe Pose (CDN)</text>
+      <text x="931" y="160">Chart.js dashboards</text>
+    </g>
+    <g fill="#B8C2CC" font-size="12.5">
+      <text x="76" y="186">10 pages: base, index, dashboard,</text>
+      <text x="76" y="206">workout planner, pose analysis,</text>
+      <text x="76" y="226">yoga hub, diet, voice assistant</text>
+
+      <text x="361" y="186">pose-detection.js · main.js</text>
+      <text x="361" y="206">exercise_analysis.js · dashboard.js</text>
+      <text x="361" y="226">real-time skeleton overlay &amp; counters</text>
+
+      <text x="646" y="186">33 body landmarks per frame</text>
+      <text x="646" y="206">landmarks POSTed to the Flask API</text>
+      <text x="646" y="226">for form scoring and rep feedback</text>
+
+      <text x="931" y="186">30-day workout history</text>
+      <text x="931" y="206">calories burned · exercise mix</text>
+      <text x="931" y="226">streak and duration cards</text>
+    </g>
+
+    <line x1="620" y1="268" x2="620" y2="300" stroke="#8898AA" stroke-width="1.5" marker-end="url(#archArrow)"/>
+
+    <!-- Band 2: Flask -->
+    <text x="40" y="294" font-size="14" font-weight="700" fill="#00F260">2 · FLASK BACKEND</text>
+    <rect x="40" y="304" width="1160" height="148" rx="18" fill="#0E0E1B" stroke="#00F260" stroke-opacity="0.28"/>
+    <g fill="#FFFFFF" font-size="15" font-weight="600">
+      <text x="76" y="344">app.py — app factory</text>
+      <text x="361" y="344">routes.py — 33 endpoints</text>
+      <text x="646" y="344">models.py + extensions.py</text>
+      <text x="931" y="344">flask-login</text>
+    </g>
+    <g fill="#B8C2CC" font-size="12.5">
+      <text x="76" y="370">ProxyFix · filesystem sessions</text>
+      <text x="76" y="390">Ollama bootstrap · db.create_all()</text>
+      <text x="76" y="410">postgres:// URL normalisation</text>
+
+      <text x="361" y="370">auth · Jinja pages · JSON APIs</text>
+      <text x="361" y="390">pose analysis · dashboard stats</text>
+      <text x="361" y="410">Google Fit OAuth callback</text>
+
+      <text x="646" y="370">SQLAlchemy 2.0 declarative models</text>
+      <text x="646" y="390">User · Workout</text>
+      <text x="646" y="410">shared db / login_manager instances</text>
+
+      <text x="931" y="370">@login_required on every page</text>
+      <text x="931" y="390">signed, server-side sessions</text>
+      <text x="931" y="410">OAuth state verification</text>
+    </g>
+
+    <line x1="620" y1="452" x2="620" y2="484" stroke="#8898AA" stroke-width="1.5" marker-end="url(#archArrow)"/>
+
+    <!-- Band 3: AI services -->
+    <text x="40" y="478" font-size="14" font-weight="700" fill="#BF00FF">3 · AI, VISION &amp; VOICE SERVICES</text>
+    <rect x="40" y="488" width="1160" height="152" rx="18" fill="#0E0E1B" stroke="#BF00FF" stroke-opacity="0.28"/>
+    <g fill="#FFFFFF" font-size="15" font-weight="600">
+      <text x="76" y="528">gemini.py + pose_detection.py</text>
+      <text x="456" y="528">diet_service.py + yoga_service.py</text>
+      <text x="836" y="528">voice_service.py → Sarvam AI</text>
+    </g>
+    <g fill="#B8C2CC" font-size="12.5">
+      <text x="76" y="554">Google Gemini models/gemini-2.0-flash</text>
+      <text x="76" y="574">(override with GEMINI_MODEL) for 4-week</text>
+      <text x="76" y="594">plans and fitness Q&amp;A · OpenCV/MediaPipe</text>
+      <text x="76" y="618">rep counters with per-exercise form scores</text>
+
+      <text x="456" y="554">100% local inference through Ollama</text>
+      <text x="456" y="574">(llama3.2 by default, auto-detects</text>
+      <text x="456" y="594">installed models) · 25-pose knowledge</text>
+      <text x="456" y="618">base + offline fallback plans</text>
+
+      <text x="836" y="554">saaras:v3 speech-to-text ·</text>
+      <text x="836" y="574">sarvam-30b chat completions ·</text>
+      <text x="836" y="594">bulbul:v3 text-to-speech ·</text>
+      <text x="836" y="618">Hindi / English / Hinglish replies</text>
+    </g>
+
+    <line x1="620" y1="646" x2="620" y2="678" stroke="#8898AA" stroke-width="1.5" marker-end="url(#archArrow)"/>
+
+    <!-- Band 4: data -->
+    <text x="40" y="672" font-size="14" font-weight="700" fill="#FF00CC">4 · DATA &amp; INTEGRATIONS</text>
+    <rect x="40" y="682" width="1160" height="122" rx="18" fill="#0E0E1B" stroke="#FF00CC" stroke-opacity="0.28"/>
+    <g fill="#FFFFFF" font-size="15" font-weight="600">
+      <text x="76" y="722">Database</text>
+      <text x="456" y="722">Google Fit REST API</text>
+      <text x="836" y="722">Static asset library</text>
+    </g>
+    <g fill="#B8C2CC" font-size="12.5">
+      <text x="76" y="748">SQLite (visionfit.db) locally,</text>
+      <text x="76" y="768">PostgreSQL via DATABASE_URL in production</text>
+
+      <text x="456" y="748">OAuth 2.0 token exchange, cached in the</text>
+      <text x="456" y="768">session · steps, calories, heart rate</text>
+
+      <text x="836" y="748">static/yoga_images pose art + inline SVG</text>
+      <text x="836" y="768">guides · style.css neon design system</text>
+    </g>
+  </g>
+</svg>

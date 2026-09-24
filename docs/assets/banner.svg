@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="VisionFit AI banner">
+  <title>VisionFit AI</title>
+  <defs>
+    <linearGradient id="vfBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050510"/>
+      <stop offset="55%" stop-color="#0a0a1c"/>
+      <stop offset="100%" stop-color="#140327"/>
+    </linearGradient>
+    <linearGradient id="vfTitle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00C6FF"/>
+      <stop offset="50%" stop-color="#BF00FF"/>
+      <stop offset="100%" stop-color="#FF00CC"/>
+    </linearGradient>
+    <linearGradient id="vfRule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00C6FF" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#BF00FF"/>
+      <stop offset="100%" stop-color="#FF00CC" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="vfGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1d2b4d" stroke-width="1" opacity="0.35"/>
+    </pattern>
+    <filter id="vfSoft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="55"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#vfBg)"/>
+  <rect width="1200" height="420" fill="url(#vfGrid)"/>
+  <circle cx="110" cy="60" r="150" fill="#00C6FF" opacity="0.20" filter="url(#vfSoft)"/>
+  <circle cx="1090" cy="370" r="170" fill="#BF00FF" opacity="0.20" filter="url(#vfSoft)"/>
+
+  <text x="600" y="168" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="92" font-weight="800" letter-spacing="1" fill="url(#vfTitle)">VisionFit AI</text>
+  <rect x="420" y="190" width="360" height="3" rx="1.5" fill="url(#vfRule)"/>
+
+  <text x="600" y="238" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="23" fill="#B8C2CC">Your personal, AI-powered digital health &amp; fitness coach.</text>
+  <text x="600" y="272" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="19" fill="#8898AA">Real-time form analysis · personalized plans · bilingual voice coaching</text>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="120" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#00C6FF" stroke-opacity="0.35"/>
+    <text x="195" y="336" fill="#DDE7F2">Pose Detection</text>
+
+    <rect x="282" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#00C6FF" stroke-opacity="0.35"/>
+    <text x="357" y="336" fill="#DDE7F2">AI Workout Plan</text>
+
+    <rect x="444" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#BF00FF" stroke-opacity="0.35"/>
+    <text x="519" y="336" fill="#DDE7F2">Smart Diet</text>
+
+    <rect x="606" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#BF00FF" stroke-opacity="0.35"/>
+    <text x="681" y="336" fill="#DDE7F2">Yoga Coach</text>
+
+    <rect x="768" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#FF00CC" stroke-opacity="0.35"/>
+    <text x="843" y="336" fill="#DDE7F2">Voice Assistant</text>
+
+    <rect x="930" y="308" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.05" stroke="#FF00CC" stroke-opacity="0.35"/>
+    <text x="1005" y="336" fill="#DDE7F2">Google Fit Sync</text>
+  </g>
+
+  <text x="600" y="392" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="16" fill="#8898AA">Flask · MediaPipe · OpenCV · Google Gemini · Ollama · Sarvam AI · SQLite / PostgreSQL</text>
+</svg>
