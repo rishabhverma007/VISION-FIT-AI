@@ -2,156 +2,540 @@
 
 {% block title %}Dashboard - VisionFit AI{% endblock %}
 
+{% block head %}
+<style>
+    .user-biometrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+    }
+    .biometric-chip {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.6rem;
+        text-align: center;
+    }
+    .biometric-chip .val {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #fff;
+    }
+    .biometric-chip .lbl {
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .bmi-badge-normal {
+        background: rgba(25, 135, 84, 0.2);
+        color: #20c997;
+        border: 1px solid #20c997;
+    }
+    .bmi-badge-under {
+        background: rgba(13, 202, 240, 0.2);
+        color: #0dcaf0;
+        border: 1px solid #0dcaf0;
+    }
+    .bmi-badge-over {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+    }
+    .bmi-badge-obese {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+    .recent-table-card {
+        background: rgba(15, 15, 25, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    .recent-table th {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-color: rgba(255, 255, 255, 0.08);
+        background: transparent;
+    }
+    .recent-table td {
+        color: #e2e8f0;
+        vertical-align: middle;
+        border-color: rgba(255, 255, 255, 0.05);
+        background: transparent;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-5 mt-5">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-lg-3 col-md-4 mb-4">
-            <div class="dashboard-card h-100">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="avatar-lg mx-auto mb-3" style="width: 100px; height: 100px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow);">
-                            <i class="fas fa-user text-white fa-3x"></i>
+<div class="dashboard-container mt-4">
+    <div class="dashboard-layout">
+
+        <!-- Left Sidebar Panel -->
+        <aside class="sidebar-panel">
+            <!-- User Profile & Bio-Metrics (Module 1) -->
+            <div class="user-profile-section p-3 text-center">
+                <div class="user-avatar-glow mx-auto mb-2">
+                    <div class="user-avatar-inner">
+                        <i class="fas fa-user fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h4 class="mb-1 text-white" id="sidebarUsername">{{ current_user.username }}</h4>
+                <p class="text-neon-cyan small mb-2" id="sidebarLevel">{{ current_user.fitness_level.title() }} Level</p>
+
+                <!-- Biometrics Grid -->
+                <div class="user-biometrics-grid">
+                    <div class="biometric-chip">
+                        <div class="val" id="sidebarAge">{{ current_user.age or 25 }} yrs</div>
+                        <div class="lbl">Age &bull; <span id="sidebarGender">{{ (current_user.gender or 'other').title() }}</span></div>
+                    </div>
+                    <div class="biometric-chip">
+                        <div class="val" id="sidebarHeight">{{ current_user.height or 170 }} cm</div>
+                        <div class="lbl">Height</div>
+                    </div>
+                    <div class="biometric-chip">
+                        <div class="val" id="sidebarWeight">{{ current_user.weight or 70 }} kg</div>
+                        <div class="lbl">Weight</div>
+                    </div>
+                    <div class="biometric-chip">
+                        <div class="val text-neon-cyan" id="sidebarBmi">{{ current_user.bmi or 22.0 }}</div>
+                        <div class="lbl">BMI Score</div>
+                    </div>
+                </div>
+
+                <!-- BMI Category & Limitations Badges -->
+                <div class="d-flex flex-column gap-2 mb-3">
+                    <div>
+                        <span class="badge rounded-pill px-3 py-1 
+                            {% if 'under' in (current_user.bmi_category or '').lower() %}bmi-badge-under
+                            {% elif 'normal' in (current_user.bmi_category or '').lower() %}bmi-badge-normal
+                            {% elif 'over' in (current_user.bmi_category or '').lower() %}bmi-badge-over
+                            {% else %}bmi-badge-normal{% endif %}" id="sidebarBmiCat">
+                            <i class="fas fa-heartbeat me-1"></i>{{ current_user.bmi_category or 'Normal weight' }}
+                        </span>
+                    </div>
+                    {% if current_user.physical_limitations and current_user.physical_limitations != 'none' %}
+                    <div>
+                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger rounded-pill px-2 py-1 small" id="sidebarLimitations">
+                            <i class="fas fa-shield-alt me-1"></i>{{ current_user.physical_limitations }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Edit Profile Button -->
+                <button type="button" class="btn btn-outline-info btn-sm rounded-pill w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="fas fa-user-edit me-1"></i>Edit Bio-Metrics
+                </button>
+            </div>
+
+            <!-- Device Sync Section (Google Fit) -->
+            <div class="device-sync-mini mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary mb-0" style="letter-spacing: 1px; font-size: 0.8rem;">
+                        Health Sync</h6>
+                    <span id="googleFitStatus" class="badge bg-dark text-muted border border-secondary"
+                        style="font-size: 0.65rem;">
+                        {% if session.get('google_fit_token') %}
+                        <span class="text-success">● On</span>
+                        {% else %}
+                        <span>○ Off</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Not Connected State -->
+                <div id="googleFitConnect"
+                    class="text-center {% if session.get('google_fit_token') %}d-none{% endif %}">
+                    <div class="google-fit-icon mb-3">
+                        <i class="fab fa-google fa-2x text-white"></i>
+                        <i class="fas fa-heartbeat fa-lg text-danger position-absolute"
+                            style="margin-left: -10px; margin-top: 20px;"></i>
+                    </div>
+                    <a href="{{ url_for('authorize_google_fit') }}" class="btn btn-outline-light btn-sm w-100">
+                        <i class="fab fa-google me-2"></i>Connect
+                    </a>
+                </div>
+
+                <!-- Connected State (Metrics) -->
+                <div id="googleFitMetrics" class="{% if not session.get('google_fit_token') %}d-none{% endif %}">
+                    <!-- Heart Rate -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-danger me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);">
+                            <i class="fas fa-heartbeat text-danger"></i>
                         </div>
-                        <h5 class="mb-1 text-gradient">{{ current_user.username }}</h5>
-                        <small class="text-light">{{ current_user.fitness_level.title() }} Level</small>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Heart Rate</small>
+                            <span id="fitHeartRate" class="fw-bold text-white">--</span> <small
+                                class="text-white">bpm</small>
+                        </div>
                     </div>
 
-                    <div class="quick-stats">
-                        <div class="stat-item d-flex justify-content-between py-2">
-                            <span><i class="fas fa-utensils me-2" style="color: var(--accent);"></i>Food Logs</span>
-                            <strong>{{ recent_food_logs|length }}</strong>
+                    <!-- Steps -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-info me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(13, 202, 240, 0.2);">
+                            <i class="fas fa-shoe-prints text-info"></i>
+                        </div>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Steps Today</small>
+                            <span id="fitSteps" class="fw-bold text-white">--</span>
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <h6 class="mb-3">Quick Actions</h6>
-                        <div class="d-grid gap-2">
-                            <a href="{{ url_for('workout_planner') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-brain me-2"></i>AI Workout Plan
-                            </a>
-                            <a href="/food-analyzer" class="btn btn-accent btn-sm">
-                                <i class="fas fa-camera me-2"></i>Food Analysis
-                            </a>
-                            <a href="{{ url_for('exercise_analysis') }}" class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye me-2"></i>Form Analysis
-                            </a>
+                    <!-- Calories -->
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-warning me-3"
+                            style="width: 40px; height: 40px; box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);">
+                            <i class="fas fa-fire-alt text-warning"></i>
                         </div>
+                        <div>
+                            <small class="text-secondary d-block" style="font-size: 0.7rem;">Active Cals</small>
+                            <span id="fitCalories" class="fw-bold text-white">--</span> <small
+                                class="text-white">kcal</small>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-2">
+                        <small class="text-secondary" style="font-size: 0.65rem;">Updated: <span id="fitLastUpdate">Just now</span></small>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="col-lg-9 col-md-8">
-            <!-- Welcome Section -->
-            <div class="mb-4">
-                <h2 class="fw-bold text-gradient">Welcome back, {{ current_user.username }}!</h2>
-                <p class="text-light">Here's your fitness progress and personalized AI-powered recommendations.</p>
+            <!-- Quick Actions -->
+            <div class="mt-4">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('exercise_analysis') }}" class="btn btn-outline-info rounded-pill">
+                        <i class="fas fa-video me-2"></i>Form Analysis
+                    </a>
+                    <a href="{{ url_for('fitness_chat_page') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-comments me-2"></i>AI Coach
+                    </a>
+                    <a href="{{ url_for('workout_planner') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-brain me-2"></i>AI Planner
+                    </a>
+                    <a href="{{ url_for('voice_assistant') }}" class="btn btn-outline-light rounded-pill">
+                        <i class="fas fa-microphone me-2"></i>Voice Assistant
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Welcome Header -->
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h1 class="display-6 fw-bold mb-1">Welcome back, <span class="text-gradient">{{ current_user.username }}</span>!</h1>
+                    <p class="text-secondary mb-0">Biomechanical performance analytics &amp; computer vision telemetry.</p>
+                </div>
+                <div class="text-end d-none d-md-block">
+                    <h2 class="h5 mb-0 text-white" id="clock">00:00</h2>
+                    <small class="text-secondary" id="date">Date</small>
+                </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
+            <!-- Neon Stat Cards (Module 6) -->
+            <div class="stats-grid">
+                <!-- Total Workouts -->
+                <div class="stat-neon-card purple">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="stat-icon">
-                            <i class="fas fa-dumbbell"></i>
+                            <i class="fas fa-dumbbell fa-lg text-neon-purple"></i>
                         </div>
-                        <div class="stat-info">
-                            <h3 id="totalWorkoutsCard">{{ total_workouts }}</h3>
-                            <p>Total Workouts</p>
-                        </div>
+                        <span class="badge bg-dark text-secondary rounded-pill border border-secondary">Sessions</span>
                     </div>
+                    <div class="stat-value text-white" id="totalWorkoutsCard">{{ total_workouts }}</div>
+                    <div class="stat-label">Total Workouts</div>
                 </div>
 
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: var(--gradient-accent);">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalCaloriesCard">{{ total_calories_burned }}</h3>
-                            <p>Calories Burned</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
+                <!-- Calories Burned -->
+                <div class="stat-neon-card blue">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-fire fa-lg text-primary"></i>
                         </div>
-                        <div class="stat-info">
-                            <h3 id="avgDurationCard">{{ avg_duration }}</h3>
-                            <p>Avg Duration</p>
-                        </div>
+                        <span class="badge bg-dark text-primary rounded-pill border border-primary">Kcals</span>
                     </div>
+                    <div class="stat-value text-white" id="totalCaloriesCard">{{ total_calories_burned }}</div>
+                    <div class="stat-label">Calories Burned</div>
                 </div>
 
-                <div class="col-lg-3 col-sm-6 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, var(--primary));">
-                            <i class="fas fa-calendar-check"></i>
+                <!-- Total Repetitions -->
+                <div class="stat-neon-card cyan">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="stat-icon">
+                            <i class="fas fa-sync-alt fa-lg text-info"></i>
                         </div>
-                        <div class="stat-info">
-                            <h3 id="streakCard">{{ streak }}</h3>
-                            <p>Day Streak</p>
-                        </div>
+                        <span class="badge bg-dark text-info rounded-pill border border-info">Reps</span>
                     </div>
+                    <div class="stat-value text-white" id="totalRepsCard">{{ total_reps }}</div>
+                    <div class="stat-label">Total Repetitions</div>
+                </div>
+
+                <!-- Avg Form Score -->
+                <div class="stat-neon-card purple">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-double fa-lg text-warning"></i>
+                        </div>
+                        <span class="badge bg-dark text-warning rounded-pill border border-warning">Quality</span>
+                    </div>
+                    <div class="stat-value text-white" id="avgFormScoreCard">{{ avg_form_score }}%</div>
+                    <div class="stat-label">Avg Form Score</div>
                 </div>
             </div>
 
-            <!-- Charts Row -->
-            <div class="row mb-4">
-                <div class="col-lg-8 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-chart-line me-2" style="color: var(--primary);"></i>Workout Progress</h5>
+            <!-- Charts Section (Module 6) -->
+            <div class="row g-4 mb-4">
+                <!-- Calories Burned Over Time -->
+                <div class="col-lg-7">
+                    <div class="chart-box h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 text-white"><i class="fas fa-chart-line me-2 text-primary"></i>Calories Burned (30 Days)</h5>
+                            <span class="badge bg-dark text-secondary border border-secondary">Trend</span>
                         </div>
-                        <div class="card-body">
-                            <canvas id="workoutChart" height="100"></canvas>
+                        <div style="height: 280px; position: relative;">
+                            <canvas id="workoutChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2" style="color: var(--primary);"></i>Exercise Types</h5>
+                <!-- Exercise Distribution Doughnut -->
+                <div class="col-lg-5">
+                    <div class="chart-box h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 text-white"><i class="fas fa-chart-pie me-2 text-secondary"></i>Exercise Distribution</h5>
+                            <span class="badge bg-dark text-secondary border border-secondary">Split</span>
                         </div>
-                        <div class="card-body">
+                        <div style="height: 280px; position: relative;">
                             <canvas id="exerciseChart"></canvas>
                         </div>
                     </div>
                 </div>
-            </div>
 
-
-
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100 glass-card">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-robot me-2" style="color: var(--accent);"></i>AI Fitness Companion</h5>
+                <!-- Form Score Quality Progression (Biomechanical Accuracy) -->
+                <div class="col-12">
+                    <div class="chart-box">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1 text-white"><i class="fas fa-award me-2 text-warning"></i>Form Score Quality Progression</h5>
+                                <small class="text-secondary">Postural biomechanics and joint angle alignment quality across sessions</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success">&gt;85% Optimal</span>
+                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning">70-85% Fair</span>
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">&lt;70% Needs Work</span>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div id="chatMessages" class="chat-messages mb-3" style="height: 200px; overflow-y: auto;">
-                                <div class="alert alert-info mb-2">
-                                    <small><strong>VisionFit AI:</strong> Hi {{ current_user.username }}! I'm here to help with your fitness journey. Ask me about workouts, nutrition, or motivation tips!</small>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" id="chatInput" class="form-control" placeholder="Ask me about fitness...">
-                                <button class="btn btn-primary" id="sendChat">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
+                        <div style="height: 250px; position: relative;">
+                            <canvas id="formScoreChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Recent Workouts History Table (Module 5 & 6) -->
+            <div class="recent-table-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white mb-0"><i class="fas fa-history me-2 text-info"></i>Recent Workout Sessions</h5>
+                    <a href="{{ url_for('exercise_analysis') }}" class="btn btn-outline-info btn-sm rounded-pill">
+                        <i class="fas fa-plus me-1"></i>New Session
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table recent-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Exercise</th>
+                                <th>Duration</th>
+                                <th>Valid / Total Reps</th>
+                                <th>Form Score</th>
+                                <th>Consistency</th>
+                                <th>Calories</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentWorkoutsTbody">
+                            {% if recent_workouts %}
+                                {% for w in recent_workouts %}
+                                <tr>
+                                    <td>{{ w.completed_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                    <td>
+                                        <span class="text-capitalize fw-bold text-white">
+                                            <i class="fas fa-dumbbell me-1 text-info"></i>{{ (w.exercise_type or w.name).replace('_', ' ') }}
+                                        </span>
+                                    </td>
+                                    <td>{{ w.duration_minutes }} min</td>
+                                    <td>
+                                        <span class="text-neon-cyan fw-bold">{{ w.valid_reps or w.reps_completed or 0 }}</span>
+                                        <small class="text-secondary">/ {{ w.reps_completed or 0 }}</small>
+                                    </td>
+                                    <td>
+                                        {% set score = w.form_score or 0 %}
+                                        <span class="badge {% if score >= 85 %}bg-success{% elif score >= 70 %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill px-2 py-1">
+                                            {{ "%.1f"|format(score) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-info fw-bold">{{ "%.1f"|format(w.movement_consistency or 85.0) }}%</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-warning fw-bold"><i class="fas fa-fire me-1"></i>{{ w.calories_burned or 0 }} kcal</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-secondary py-4">
+                                        <i class="fas fa-dumbbell fa-2x mb-2 d-block opacity-50"></i>
+                                        No workout sessions recorded yet. Start your first session in <a href="{{ url_for('exercise_analysis') }}" class="text-neon-cyan">Form Analysis</a>!
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Edit Profile Modal (Module 1 Data Collection & Biometrics) -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-0 text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="editProfileModalLabel"><i class="fas fa-user-edit me-2 text-info"></i>Edit Biometrics &amp; Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProfileForm" onsubmit="handleProfileUpdate(event)">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small">Age (years)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="modalAge" value="{{ current_user.age or 25 }}" min="10" max="120" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small">Gender</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="modalGender">
+                                <option value="male" {% if current_user.gender == 'male' %}selected{% endif %}>Male</option>
+                                <option value="female" {% if current_user.gender == 'female' %}selected{% endif %}>Female</option>
+                                <option value="other" {% if current_user.gender not in ['male', 'female'] %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small">Height (cm)</label>
+                            <input type="number" step="0.1" class="form-control bg-dark text-white border-secondary" id="modalHeight" value="{{ current_user.height or 170.0 }}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small">Weight (kg)</label>
+                            <input type="number" step="0.1" class="form-control bg-dark text-white border-secondary" id="modalWeight" value="{{ current_user.weight or 70.0 }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-secondary small">Fitness Level</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="modalFitnessLevel">
+                                <option value="beginner" {% if current_user.fitness_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="intermediate" {% if current_user.fitness_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="advanced" {% if current_user.fitness_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-secondary small">Fitness Goals</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="modalGoals" value="{{ current_user.fitness_goals or 'General Fitness' }}" placeholder="e.g., Muscle building, fat loss, mobility">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-secondary small">Physical Limitations / Injuries</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="modalLimitations" value="{{ current_user.physical_limitations or 'none' }}" placeholder="e.g., none, knee pain, lower back issue, shoulder impingement">
+                            <small class="text-secondary" style="font-size: 0.72rem;">AI algorithms adapt all exercises and diet plans around your constraints.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4" id="saveProfileBtn">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+    // Live clock
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('date').textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    // Profile update handler
+    async function handleProfileUpdate(e) {
+        e.preventDefault();
+        const saveBtn = document.getElementById('saveProfileBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+
+        const payload = {
+            age: parseInt(document.getElementById('modalAge').value),
+            gender: document.getElementById('modalGender').value,
+            height: parseFloat(document.getElementById('modalHeight').value),
+            weight: parseFloat(document.getElementById('modalWeight').value),
+            fitness_level: document.getElementById('modalFitnessLevel').value,
+            fitness_goals: document.getElementById('modalGoals').value,
+            physical_limitations: document.getElementById('modalLimitations').value
+        };
+
+        try {
+            const res = await fetch('/api/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Update DOM elements instantly
+                document.getElementById('sidebarAge').textContent = `${payload.age} yrs`;
+                document.getElementById('sidebarGender').textContent = payload.gender.charAt(0).toUpperCase() + payload.gender.slice(1);
+                document.getElementById('sidebarHeight').textContent = `${payload.height} cm`;
+                document.getElementById('sidebarWeight').textContent = `${payload.weight} kg`;
+                document.getElementById('sidebarBmi').textContent = data.bmi || (payload.weight / ((payload.height/100)**2)).toFixed(1);
+                document.getElementById('sidebarBmiCat').innerHTML = `<i class="fas fa-heartbeat me-1"></i>${data.bmi_category || 'Normal weight'}`;
+                document.getElementById('sidebarLevel').textContent = `${payload.fitness_level.charAt(0).toUpperCase() + payload.fitness_level.slice(1)} Level`;
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                if (modal) modal.hide();
+
+                if (window.VisionFit && window.VisionFit.utils) {
+                    window.VisionFit.utils.showToast('Profile and biometrics updated!', 'success');
+                } else {
+                    alert('Profile and biometrics updated successfully!');
+                }
+            } else {
+                alert(data.error || 'Failed to update profile');
+            }
+        } catch (err) {
+            console.error('Profile update failed:', err);
+            alert('Network error updating profile.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Save Changes';
+        }
+    }
+</script>
 {% endblock %}
 
 {% block scripts %}

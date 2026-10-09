@@ -1,0 +1,131 @@
+"""
+VisionFit AI launcher: starts Ollama (if needed) and the Flask app.
+Everything runs on a single address: http://localhost:5000
+(Voice Assistant is a feature at /voice-assistant on the same port.)
+Run via: run_visionfit.bat  (or: python start_app.py)
+"""
+import atexit
+import os
+import subprocess
+import sys
+import time
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+_flask_proc = None
+_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_FLASK_LOG = os.path.join(_PROJECT_ROOT, "visionfit_flask.log")
+
+
+def _kill_flask():
+    global _flask_proc
+    if _flask_proc is not None and _flask_proc.poll() is None:
+        try:
+            _flask_proc.terminate()
+            _flask_proc.wait(timeout=5)
+        except Exception:
+            try:
+                _flask_proc.kill()
+            except Exception:
+                pass
+        print("  Flask stopped.")
+    _flask_proc = None
+
+
+def is_ollama_running():
+    if requests is None:
+        return False
+    try:
+        r = requests.get("http://localhost:11434", timeout=2)
+        return r.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+
+
+def _find_ollama():
+    import shutil
+    cmd = shutil.which("ollama")
+    if cmd:
+        return cmd
+    if sys.platform == "win32":
+        local_app_data = os.environ.get("LOCALAPPDATA", "")
+        fallback = os.path.join(local_app_data, "Programs", "Ollama", "ollama.exe")
+        if os.path.isfile(fallback):
+            return fallback
+    return "ollama"
+
+
+def start_ollama():
+    print("Ollama is not running. Starting Ollama...")
+    ollama_cmd = _find_ollama()
+    try:
+        if sys.platform == "win32":
+            subprocess.Popen([ollama_cmd, "serve"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        else:
+            subprocess.Popen([ollama_cmd, "serve"])
+        print("Waiting for Ollama to start...")
+        for _ in range(30):
+            if is_ollama_running():
+                print("Ollama started successfully.")
+                return True
+            time.sleep(1)
+        print("Timed out waiting for Ollama.")
+        return False
+    except FileNotFoundError:
+        print("Error: 'ollama' not found. Install Ollama and add it to PATH.")
+        return False
+
+
+def main():
+    global _flask_proc
+
+    if not is_ollama_running():
+        if not start_ollama():
+            print("Ollama failed to start. Yoga/Voice features may use fallbacks.")
+    else:
+        print("Ollama is already running.")
+
+    print("Starting VisionFit Flask app...")
+    flask_out = open(_FLASK_LOG, "w", encoding="utf-8", errors="replace")
+    venv_python = os.path.join(_PROJECT_ROOT, ".venv", "Scripts", "python.exe")
+    python_exe = venv_python if os.path.isfile(venv_python) else sys.executable
+    try:
+        _flask_proc = subprocess.Popen(
+            [python_exe, "app.py"],
+            cwd=_PROJECT_ROOT,
+            stdout=flask_out,
+            stderr=subprocess.STDOUT,
+            env=os.environ.copy(),
+        )
+    except Exception as e:
+        print(f"Failed to start Flask: {e}")
+        flask_out.close()
+        _flask_proc = None
+    else:
+        time.sleep(1.5)
+        if _flask_proc.poll() is not None:
+            print("Flask exited immediately. Output from visionfit_flask.log:")
+            try:
+                with open(_FLASK_LOG, "r", encoding="utf-8", errors="replace") as f:
+                    print(f.read())
+            except Exception:
+                pass
+        else:
+            print("  VisionFit AI at http://localhost:5000")
+            print("  Voice Assistant: http://localhost:5000/voice-assistant")
+
+    atexit.register(_kill_flask)
+    print("")
+    print("Press Enter to stop and exit...")
+    try:
+        input()
+    except KeyboardInterrupt:
+        pass
+    _kill_flask()
+
+
+if __name__ == "__main__":
+    main()

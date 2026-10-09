@@ -12,6 +12,11 @@ class DashboardManager {
         this.init();
     }
 
+    // Bluetooth Manager Removed
+    initBluetooth() {
+        // Bluetooth functionality removed in favor of Google Fit
+    }
+
     async init() {
         try {
             await this.loadDashboardData();
@@ -19,6 +24,9 @@ class DashboardManager {
             this.setupChatInterface();
             this.setupEventListeners();
             this.startLiveUpdates();
+
+            this.startLiveUpdates();
+            this.initBluetooth();
 
             console.log('Dashboard initialized successfully');
         } catch (error) {
@@ -37,6 +45,17 @@ class DashboardManager {
             } else {
                 throw new Error(response.error || 'Failed to load dashboard data');
             }
+
+            // Also load Google Fit data if available
+            this.loadGoogleFitData();
+
+            // Auto-refresh Google Fit data every 60 seconds
+            if (!this.fitInterval) {
+                this.fitInterval = setInterval(() => {
+                    this.loadGoogleFitData();
+                }, 60000);
+            }
+
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
             // Use mock data for demonstration
@@ -45,23 +64,96 @@ class DashboardManager {
         }
     }
 
+    async loadGoogleFitData() {
+        try {
+            const response = await VisionFit.api.get('/google-fit-data');
+            if (response.success && response.data) {
+                this.updateGoogleFitUI(response.data);
+            }
+        } catch (error) {
+            console.log('Google Fit data not available or not connected');
+        }
+    }
+
+    updateGoogleFitUI(data) {
+        // Update the Health Sync sidebar widgets
+
+        // Show metrics section if hidden
+        const metricsSection = document.getElementById('googleFitMetrics');
+        const connectSection = document.getElementById('googleFitConnect');
+        const statusBadge = document.getElementById('googleFitStatus');
+
+        if (metricsSection) metricsSection.classList.remove('d-none');
+        if (connectSection) connectSection.classList.add('d-none');
+        if (statusBadge) statusBadge.innerHTML = '<span class="text-success">● On</span>';
+
+        // Animate numbers
+        const animateValue = (id, start, end, duration) => {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            start = start || 0;
+            end = end || 0;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        };
+
+        // Steps
+        if (data.steps !== undefined) {
+            animateValue('fitSteps', 0, data.steps, 1000);
+        }
+
+        // Calories
+        if (data.calories !== undefined) {
+            animateValue('fitCalories', 0, data.calories, 1000);
+        }
+
+        // Heart Rate
+        const hrEl = document.getElementById('fitHeartRate');
+        if (hrEl && data.heart_rate) {
+            hrEl.textContent = data.heart_rate;
+            if (data.heart_rate !== '--') {
+                // Add pulse effect
+                const icon = hrEl.closest('.d-flex').querySelector('.fa-heartbeat');
+                if (icon) icon.classList.add('heart-pulse');
+            }
+        }
+
+        // Update timestamp
+        const timeEl = document.getElementById('fitLastUpdate');
+        if (timeEl) {
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+    }
+
+
     generateMockData() {
         const dates = [];
         const calories = [];
+        const formScores = [];
         const workouts = [];
 
-        // Generate data for last 30 days
-        for (let i = 29; i >= 0; i--) {
+        // Generate data for past 14 days
+        for (let i = 13; i >= 0; i--) {
             const date = new Date();
             date.setDate(date.getDate() - i);
-            dates.push(date.toISOString().split('T')[0]);
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
 
-            // Random workout data
-            if (Math.random() > 0.4) { // 60% chance of workout
-                calories.push(Math.floor(Math.random() * 300) + 200);
+            if (Math.random() > 0.45) {
+                calories.push(Math.floor(Math.random() * 200) + 120);
+                formScores.push(Math.floor(Math.random() * 12) + 84);
                 workouts.push(1);
             } else {
                 calories.push(0);
+                formScores.push(0);
                 workouts.push(0);
             }
         }
@@ -69,115 +161,109 @@ class DashboardManager {
         return {
             workout_dates: dates,
             calories_burned: calories,
+            form_scores: formScores,
+            exercise_distribution: {
+                pushup: 5,
+                squat: 8,
+                jumping_jack: 4,
+                yoga: 2,
+                other: 0
+            },
             total_workouts: workouts.reduce((sum, w) => sum + w, 0),
-            avg_calories: Math.round(calories.reduce((sum, c) => sum + c, 0) / calories.length)
+            total_reps: 185,
+            avg_form_score: 87.5,
+            avg_calories: Math.round(calories.reduce((sum, c) => sum + c, 0) / (workouts.filter(w => w > 0).length || 1))
         };
     }
 
     updateStatCards() {
-        // Update workout stats from the dashboard data
         const totalWorkoutsCard = document.getElementById('totalWorkoutsCard');
         const totalCaloriesCard = document.getElementById('totalCaloriesCard');
-        const avgDurationCard = document.getElementById('avgDurationCard');
-        const streakCard = document.getElementById('streakCard');
-        
-        // Use the values already set in the HTML template
-        // These cards are populated from the server-side data
-        
-        // Update sidebar stats if available
-        const weeklyWorkouts = document.getElementById('weeklyWorkouts');
-        if (weeklyWorkouts && this.dashboardData && this.dashboardData.calories_burned) {
-            const recentWorkouts = this.dashboardData.calories_burned.slice(-7).filter(c => c > 0).length;
-            weeklyWorkouts.textContent = recentWorkouts;
+        const totalRepsCard = document.getElementById('totalRepsCard');
+        const avgFormScoreCard = document.getElementById('avgFormScoreCard');
+
+        if (this.dashboardData) {
+            if (totalWorkoutsCard && this.dashboardData.total_workouts !== undefined) {
+                totalWorkoutsCard.textContent = this.dashboardData.total_workouts;
+            }
+            if (totalCaloriesCard && this.dashboardData.avg_calories !== undefined) {
+                const sumCals = (this.dashboardData.calories_burned || []).reduce((a, b) => a + b, 0);
+                totalCaloriesCard.textContent = sumCals || totalCaloriesCard.textContent;
+            }
+            if (totalRepsCard && this.dashboardData.total_reps !== undefined) {
+                totalRepsCard.textContent = this.dashboardData.total_reps;
+            }
+            if (avgFormScoreCard && this.dashboardData.avg_form_score !== undefined) {
+                avgFormScoreCard.textContent = `${this.dashboardData.avg_form_score}%`;
+            }
         }
     }
 
     initializeCharts() {
         this.createWorkoutProgressChart();
         this.createExerciseDistributionChart();
+        this.createFormScoreChart();
     }
 
     createWorkoutProgressChart() {
         const ctx = document.getElementById('workoutChart');
         if (!ctx) return;
 
-        // Prepare data for last 14 days
-        const dates = this.dashboardData.workout_dates.slice(-14);
-        const calories = this.dashboardData.calories_burned.slice(-14);
-
-        const labels = dates.map(date => {
-            const d = new Date(date);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
+        const dates = (this.dashboardData.workout_dates && this.dashboardData.workout_dates.length) 
+            ? this.dashboardData.workout_dates 
+            : ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'];
+        const calories = (this.dashboardData.calories_burned && this.dashboardData.calories_burned.length) 
+            ? this.dashboardData.calories_burned 
+            : [0, 0, 0, 0, 0];
 
         this.charts.workoutProgress = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: dates,
                 datasets: [{
                     label: 'Calories Burned',
                     data: calories,
-                    borderColor: '#FF6B35',
-                    backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                    borderColor: '#0072FF',
+                    backgroundColor: 'rgba(0, 114, 255, 0.15)',
                     borderWidth: 3,
                     fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#FF6B35',
+                    tension: 0.35,
+                    pointBackgroundColor: '#0dcaf0',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
                         titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#FF6B35',
+                        bodyColor: '#0dcaf0',
+                        borderColor: '#0072FF',
                         borderWidth: 1,
-                        cornerRadius: 8,
-                        padding: 12
+                        padding: 10,
+                        callbacks: {
+                            label: function (context) { return context.parsed.y + ' kcal'; }
+                        }
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#6c757d'
-                        }
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        ticks: { color: '#94a3b8', font: { size: 11 } }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: {
-                            color: '#6c757d',
-                            callback: function(value) {
-                                return value + ' cal';
-                            }
+                            color: '#94a3b8',
+                            callback: function (value) { return value + ' cal'; }
                         }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                elements: {
-                    point: {
-                        hoverBackgroundColor: '#FF6B35',
-                        hoverBorderColor: '#ffffff'
                     }
                 }
             }
@@ -188,30 +274,33 @@ class DashboardManager {
         const ctx = document.getElementById('exerciseChart');
         if (!ctx) return;
 
-        // Mock exercise distribution data
-        const exerciseData = {
-            'Push-ups': 35,
-            'Squats': 30,
-            'Jumping Jacks': 20,
-            'Others': 15
-        };
+        const dist = this.dashboardData.exercise_distribution || {};
+        const pushups = dist.pushup || 0;
+        const squats = dist.squat || 0;
+        const jacks = dist.jumping_jack || 0;
+        const yoga = dist.yoga || 0;
+        const other = dist.other || 0;
+
+        const total = pushups + squats + jacks + yoga + other;
+        const displayData = total > 0 
+            ? [pushups, squats, jacks, yoga] 
+            : [1, 1, 1, 1];
 
         this.charts.exerciseDistribution = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(exerciseData),
+                labels: ['Pushups', 'Squats', 'Jumping Jacks', 'Yoga'],
                 datasets: [{
-                    data: Object.values(exerciseData),
+                    data: displayData,
                     backgroundColor: [
+                        '#0dcaf0',
+                        '#7000FF',
                         '#FF6B35',
-                        '#004E89',
-                        '#00A8CC',
-                        '#2ECC71'
+                        '#20c997'
                     ],
-                    borderWidth: 3,
-                    borderColor: '#ffffff',
-                    hoverBorderWidth: 4,
-                    hoverBorderColor: '#ffffff'
+                    borderWidth: 2,
+                    borderColor: '#0f172a',
+                    hoverOffset: 6
                 }]
             },
             options: {
@@ -221,40 +310,88 @@ class DashboardManager {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            }
+                            padding: 16,
+                            color: '#94a3b8',
+                            font: { size: 11 }
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
-                        titleColor: '#ffffff',
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
                         bodyColor: '#ffffff',
-                        borderColor: '#FF6B35',
+                        borderColor: '#7000FF',
                         borderWidth: 1,
-                        cornerRadius: 8,
-                        padding: 12,
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
-                            }
-                        }
+                        padding: 10
                     }
                 },
-                cutout: '60%',
-                animation: {
-                    animateRotate: true,
-                    animateScale: true,
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                }
+                cutout: '65%'
             }
         });
     }
 
+    createFormScoreChart() {
+        const ctx = document.getElementById('formScoreChart');
+        if (!ctx) return;
+
+        const dates = (this.dashboardData.workout_dates && this.dashboardData.workout_dates.length) 
+            ? this.dashboardData.workout_dates 
+            : ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5'];
+        const scores = (this.dashboardData.form_scores && this.dashboardData.form_scores.length) 
+            ? this.dashboardData.form_scores 
+            : [85, 88, 90, 87, 92];
+
+        this.charts.formScoreProgression = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Posture Form Score (%)',
+                    data: scores,
+                    borderColor: '#20c997',
+                    backgroundColor: 'rgba(32, 201, 151, 0.12)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#20c997',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#20c997',
+                        borderColor: '#20c997',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function (context) { return 'Form Score: ' + context.parsed.y + '%'; }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        ticks: { color: '#94a3b8', font: { size: 11 } }
+                    },
+                    y: {
+                        min: 40,
+                        max: 100,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function (value) { return value + '%'; }
+                        }
+                    }
+                }
+            }
+        });
     setupChatInterface() {
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendChat');
@@ -461,8 +598,33 @@ class DashboardManager {
     }
 
     updateCharts() {
-        // No workout charts to update
-        return;
+        if (!this.dashboardData) return;
+
+        // 1. Update workout progress chart (Calories)
+        if (this.charts.workoutProgress && this.dashboardData.workout_dates) {
+            this.charts.workoutProgress.data.labels = this.dashboardData.workout_dates;
+            this.charts.workoutProgress.data.datasets[0].data = this.dashboardData.calories_burned || [];
+            this.charts.workoutProgress.update();
+        }
+
+        // 2. Update exercise distribution doughnut chart
+        if (this.charts.exerciseDistribution && this.dashboardData.exercise_distribution) {
+            const dist = this.dashboardData.exercise_distribution;
+            const pushups = dist.pushup || 0;
+            const squats = dist.squat || 0;
+            const jacks = dist.jumping_jack || 0;
+            const yoga = dist.yoga || 0;
+            const total = pushups + squats + jacks + yoga;
+            this.charts.exerciseDistribution.data.datasets[0].data = total > 0 ? [pushups, squats, jacks, yoga] : [1, 1, 1, 1];
+            this.charts.exerciseDistribution.update();
+        }
+
+        // 3. Update form score progression chart
+        if (this.charts.formScoreProgression && this.dashboardData.workout_dates) {
+            this.charts.formScoreProgression.data.labels = this.dashboardData.workout_dates;
+            this.charts.formScoreProgression.data.datasets[0].data = this.dashboardData.form_scores || [];
+            this.charts.formScoreProgression.update();
+        }
     }
 
     async refreshDashboard() {
@@ -525,8 +687,11 @@ class DashboardManager {
     }
 }
 
+
+
+
 // Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Check if we're on the dashboard page
     if (document.getElementById('workoutChart')) {
         window.dashboardManager = new DashboardManager();
@@ -534,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('beforeunload', function () {
     if (window.dashboardManager) {
         window.dashboardManager.destroy();
     }

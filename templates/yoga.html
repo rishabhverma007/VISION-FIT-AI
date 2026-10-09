@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Yoga Hub - VisionFit AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="margin-top: 60px;">
+    <div class="row justify-content-center">
+        <!-- Input Panel -->
+        <div class="col-lg-4 mb-4">
+            <div class="glass-panel p-4 h-100">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px; border-radius: 50%; background: var(--gradient-secondary); box-shadow: var(--shadow-neon-purple);">
+                        <i class="fas fa-spa fa-2x text-white"></i>
+                    </div>
+                    <h2 class="h3 fw-bold">Smart Yoga Coach</h2>
+                    <p class="text-secondary small">Powered by Local AI</p>
+                </div>
+
+                <form id="yogaForm">
+                    <div class="mb-4">
+                        <label class="form-label text-white">How are you feeling today?</label>
+                        <div class="d-grid gap-2 grid-cols-2" style="display: grid; grid-template-columns: 1fr 1fr;">
+                            <input type="radio" class="btn-check" name="feeling" id="energetic" value="Energetic"
+                                checked>
+                            <label class="btn btn-outline-light" for="energetic">⚡ Energetic</label>
+
+                            <input type="radio" class="btn-check" name="feeling" id="stressed" value="Stressed">
+                            <label class="btn btn-outline-light" for="stressed">🧘 Stressed</label>
+
+                            <input type="radio" class="btn-check" name="feeling" id="tired" value="Tired">
+                            <label class="btn btn-outline-light" for="tired">💤 Tired</label>
+
+                            <input type="radio" class="btn-check" name="feeling" id="sore" value="Sore">
+                            <label class="btn btn-outline-light" for="sore">🤕 Sore</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">Focus Goal</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="goal">
+                            <option value="flexibility">Flexibility & Stretching</option>
+                            <option value="strength">Core Strength</option>
+                            <option value="balance">Balance & Stability</option>
+                            <option value="relaxation">Relaxation & Sleep</option>
+                            <option value="back_pain">Lower Back Relief</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">Mobility / Accessibility</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="mobility">
+                            <option value="standard">Standard (Mat)</option>
+                            <option value="chair">Chair Yoga (Seated)</option>
+                            <option value="bed">Gentle / Bed Yoga</option>
+                            <option value="limited_mobility">Limited Mobility (general)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">Duration (Minutes)</label>
+                        <input type="range" class="form-range" min="10" max="60" step="5" id="duration" value="20"
+                            oninput="document.getElementById('durationVal').innerText = this.value + ' min'">
+                        <div class="text-end text-neon-cyan fw-bold" id="durationVal">20 min</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg"
+                            style="background: var(--gradient-secondary); border: none; box-shadow: var(--shadow-neon-purple);">
+                            <i class="fas fa-magic me-2"></i>Generate Plan
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Status/Error Message -->
+                <div id="statusMessage" class="mt-3 text-center small"></div>
+            </div>
+        </div>
+
+        <!-- Output Panel (The Plan) -->
+        <div class="col-lg-7">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center d-none py-5">
+                <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h4 class="text-white animate-pulse">Consulting AI Yogi...</h4>
+                <p class="text-secondary">Designing your personalized flow.</p>
+            </div>
+
+            <!-- Results State -->
+            <div id="planResult" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold text-gradient mb-1" id="planTitle">Morning Flow</h3>
+                        <p class="text-secondary mb-0" id="planDesc">A gentle wake-up routine.</p>
+                    </div>
+                    <button class="btn btn-neon-cyan" onclick="startSession()">
+                        <i class="fas fa-play me-2"></i>Start Session
+                    </button>
+                </div>
+
+                <div class="timeline-container ps-3 border-start border-secondary" id="poseList">
+                    <!-- Poses will be inserted here via JS -->
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5 opacity-50">
+                <i class="fas fa-om fa-5x mb-3 text-secondary"></i>
+                <h3>Your Mat is Waiting</h3>
+                <p>Customize your inputs on the left to begin.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('yogaForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // UI Updates
+        document.getElementById('emptyState').classList.add('d-none');
+        document.getElementById('planResult').classList.add('d-none');
+        document.getElementById('loadingState').classList.remove('d-none');
+        const btn = this.querySelector('button[type="submit"]');
+        const originalBtnText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+
+        // Data Collection
+        const feeling = document.querySelector('input[name="feeling"]:checked').value;
+        const goal = document.getElementById('goal').value;
+        const mobility = document.getElementById('mobility').value;
+        const duration = document.getElementById('duration').value;
+
+        try {
+            const response = await fetch('/api/generate-yoga-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feeling, goal, mobility, duration })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                renderPlan(data.plan);
+            } else {
+                showError("Couldn't generate plan. Is local AI running?");
+            }
+        } catch (error) {
+            console.error(error);
+            showError("Network error. Please try again.");
+        } finally {
+            document.getElementById('loadingState').classList.add('d-none');
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+        }
+    });
+
+    function renderPlan(plan) {
+        document.getElementById('planTitle').textContent = plan.title;
+        document.getElementById('planDesc').textContent = plan.description;
+
+        const container = document.getElementById('poseList');
+        container.innerHTML = '';
+
+        plan.poses.forEach((pose, index) => {
+            const hasImage = pose.image ? true : false;
+            // Construct the pose card HTML
+            const html = `
+            <div class="glass-card p-3 mb-3 ms-3 position-relative animate-up" style="animation-delay: ${index * 0.1}s">
+                <div class="position-absolute start-0 top-50 translate-middle border border-secondary bg-dark rounded-circle d-flex align-items-center justify-content-center" 
+                     style="width: 30px; height: 30px; margin-left: -1px;">
+                    <span class="small text-white">${index + 1}</span>
+                </div>
+                
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                        ${hasImage ?
+                    `<img src="/static/yoga_images/${pose.image}" alt="${pose.name}" class="rounded" style="height: 80px; width: 80px; object-fit: cover; border: 2px solid var(--neon-cyan);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                    ''}
+                        <div class="bg-dark rounded p-2 align-items-center justify-content-center" style="height: 80px; width: 80px; margin: 0 auto; ${hasImage ? 'display: none;' : 'display: flex;'}">
+                            <i class="fas fa-spa text-secondary fa-lg"></i>
+                        </div >
+                    </div >
+                    <div class="col-md-7">
+                        <h5 class="mb-1 text-white">${pose.name}</h5>
+                        <p class="small text-secondary mb-0">${pose.instruction || 'Follow the guidance.'}</p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <span class="badge bg-dark border border-secondary rounded-pill py-2 px-3">
+                            <i class="fas fa-stopwatch me-1 text-neon-cyan"></i> ${pose.duration_seconds}s
+                        </span>
+                    </div>
+                </div >
+            </div >
+                `;
+            container.innerHTML += html;
+        });
+
+        document.getElementById('planResult').classList.remove('d-none');
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('statusMessage');
+        el.innerHTML = `<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>${msg}</span>`;
+        setTimeout(() => el.innerHTML = '', 5000);
+    }
+
+    function startSession() {
+        // For now, redirect to exercise analysis, but ideally this would start a specific "Yoga Mode"
+        window.location.href = "{{ url_for('exercise_analysis') }}";
+    }
+</script>
+
+<style>
+    .animate-up {
+        animation: fadeInUp 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

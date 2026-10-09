@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Voice Assistant - VisionFit AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="margin-top: 60px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="glass-panel p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-dark border border-info d-flex align-items-center justify-content-center me-3"
+                            style="width: 56px; height: 56px; box-shadow: 0 0 15px rgba(13, 202, 240, 0.3);">
+                            <i class="fas fa-microphone fa-lg text-info"></i>
+                        </div>
+                        <div>
+                            <h2 class="h5 fw-bold text-white mb-0">Bilingual Voice Assistant</h2>
+                            <p class="text-secondary small mb-0">Speak in Hindi or English • Real-time response • Same localhost</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearVoiceChat" title="Clear history">
+                        <i class="fas fa-trash-alt me-1"></i>Clear
+                    </button>
+                </div>
+
+                <!-- Chat history -->
+                <div id="voiceChatHistory" class="mb-4 rounded-3 overflow-auto bg-dark bg-opacity-50 p-3"
+                    style="min-height: 280px; max-height: 400px;">
+                    <div id="voiceChatMessages"></div>
+                    <div id="voiceEmptyState" class="text-center text-secondary py-5">
+                        <i class="fas fa-microphone fa-3x mb-3 opacity-50"></i>
+                        <p class="mb-0">Click <strong>Start Recording</strong> and speak in Hindi or English.</p>
+                    </div>
+                </div>
+
+                <!-- Voice: Record button and status -->
+                <div class="d-flex flex-column align-items-center mb-3">
+                    <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 py-3" id="recordBtn"
+                        style="background: var(--gradient-secondary); border: none; box-shadow: var(--shadow-neon-purple);">
+                        <i class="fas fa-microphone me-2"></i><span id="recordBtnText">Start Recording</span>
+                    </button>
+                    <p class="text-secondary small mt-2 mb-0" id="recordStatus">Allow microphone when prompted, then click Start → speak → click Stop &amp; Send.</p>
+                    <div id="voiceError" class="text-danger small mt-2 text-center" style="display: none;"></div>
+                </div>
+                <!-- Fallback: type message if mic not working -->
+                <div class="border-top border-secondary pt-3">
+                    <label class="form-label text-secondary small mb-1">Or type your question (if mic doesn't work)</label>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="voiceTextInput"
+                            placeholder="Type in Hindi or English..." autocomplete="off">
+                        <button type="button" class="btn btn-outline-light" id="voiceTextSend" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const recordBtn = document.getElementById('recordBtn');
+    const recordBtnText = document.getElementById('recordBtnText');
+    const recordStatus = document.getElementById('recordStatus');
+    const voiceError = document.getElementById('voiceError');
+    const voiceChatMessages = document.getElementById('voiceChatMessages');
+    const voiceEmptyState = document.getElementById('voiceEmptyState');
+    const clearVoiceChat = document.getElementById('clearVoiceChat');
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    function showError(msg) {
+        voiceError.textContent = msg || '';
+        voiceError.style.display = msg ? 'block' : 'none';
+    }
+
+    function setStatus(msg) {
+        recordStatus.textContent = msg || 'Press the button and speak, then press again to send.';
+    }
+
+    function addUserBubble(text) {
+        voiceEmptyState.style.display = 'none';
+        const div = document.createElement('div');
+        div.className = 'mb-3 text-end';
+        const bubble = document.createElement('div');
+        bubble.className = 'd-inline-block p-3 rounded-3 text-start';
+        bubble.style.cssText = 'max-width: 85%; background: rgba(13, 202, 240, 0.15); border: 1px solid var(--neon-cyan);';
+        bubble.innerHTML = '<div class="small text-secondary mb-1">You</div><div class="text-white">' + escapeHtml(text) + '</div>';
+        div.appendChild(bubble);
+        voiceChatMessages.appendChild(div);
+        scrollToBottom();
+    }
+
+    function createAssistantBubble() {
+        const div = document.createElement('div');
+        div.className = 'mb-3 text-start';
+        const bubble = document.createElement('div');
+        bubble.className = 'd-inline-block p-3 rounded-3 text-start';
+        bubble.style.cssText = 'max-width: 90%; background: rgba(138, 43, 226, 0.15); border: 1px solid rgba(138, 43, 226, 0.5);';
+        bubble.innerHTML = '<div class="small text-secondary mb-1">Assistant</div><div class="text-white assistant-text"></div><div class="assistant-audio mt-2"></div>';
+        div.appendChild(bubble);
+        voiceChatMessages.appendChild(div);
+        scrollToBottom();
+        return bubble;
+    }
+
+    var currentAssistantBubble = null;
+
+    function appendAssistantToken(token) {
+        if (!currentAssistantBubble) {
+            currentAssistantBubble = createAssistantBubble();
+        }
+        var textEl = currentAssistantBubble.querySelector('.assistant-text');
+        textEl.textContent = (textEl.textContent || '') + token;
+        scrollToBottom();
+    }
+
+    function setAssistantAudio(base64) {
+        if (!currentAssistantBubble) return;
+        var container = currentAssistantBubble.querySelector('.assistant-audio');
+        if (!container || !base64) return;
+        var audio = document.createElement('audio');
+        audio.controls = true;
+        audio.className = 'w-100';
+        audio.src = 'data:audio/mp3;base64,' + base64;
+        container.appendChild(audio);
+        audio.play().catch(function(){});
+        scrollToBottom();
+        currentAssistantBubble = null;
+    }
+
+    function escapeHtml(s) {
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+        var el = voiceChatMessages.parentElement;
+        if (el) el.scrollTop = el.scrollHeight;
+    }
+
+    async function sendAudioStream(blob) {
+        recordBtn.disabled = true;
+        showError('');
+        currentAssistantBubble = null;
+        setStatus('Transcribing…');
+
+        var formData = new FormData();
+        formData.append('audio', blob, 'recording.wav');
+
+        var buffer = '';
+        try {
+            var res = await fetch('{{ url_for("api_voice_process") }}', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!res.ok) {
+                setStatus('');
+                showError('Request failed: ' + res.status);
+                recordBtn.disabled = false;
+                return;
+            }
+            var reader = res.body.getReader();
+            var decoder = new TextDecoder();
+            while (true) {
+                var chunk = await reader.read();
+                if (chunk.done) break;
+                buffer += decoder.decode(chunk.value, { stream: true });
+                var lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    if (!line) continue;
+                    try {
+                        var data = JSON.parse(line);
+                        if (data.type === 'user_text') {
+                            addUserBubble(data.text || '');
+                            setStatus('Thinking…');
+                        } else if (data.type === 'token') {
+                            setStatus('Replying…');
+                            appendAssistantToken(data.text || '');
+                        } else if (data.type === 'assistant_text') {
+                            setStatus('Speaking…');
+                        } else if (data.type === 'audio') {
+                            setAssistantAudio(data.base64 || null);
+                            setStatus('');
+                        } else if (data.type === 'done') {
+                            setStatus('');
+                        } else if (data.type === 'error') {
+                            showError(data.error || 'Error');
+                            setStatus('');
+                        }
+                    } catch (e) {}
+                }
+            }
+            if (buffer.trim()) {
+                try {
+                    var data = JSON.parse(buffer);
+                    if (data.type === 'error') showError(data.error);
+                } catch (e) {}
+            }
+        } catch (e) {
+            showError('Network error: ' + e.message);
+            setStatus('');
+        }
+        recordBtn.disabled = false;
+    }
+
+    async function startRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showError('Microphone not supported. Use the text box below or try Chrome/Edge.');
+            return;
+        }
+        try {
+            var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
+            var mimeType = 'audio/webm';
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+            else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+            else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+            var options = mimeType ? { mimeType: mimeType } : {};
+            mediaRecorder = new MediaRecorder(stream, options);
+            mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = function () {
+                stream.getTracks().forEach(function (t) { t.stop(); });
+                if (audioChunks.length) {
+                    var blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    sendAudioStream(blob);
+                } else {
+                    showError('No audio recorded. Speak after clicking Start, then click Stop & Send. Or use the text box.');
+                    setStatus('Press the button and speak, then press again to send.');
+                }
+            };
+            mediaRecorder.start(250);
+            isRecording = true;
+            recordBtnText.textContent = 'Stop & Send';
+            setStatus('Listening… Speak now, then click Stop & Send.');
+            showError('');
+        } catch (e) {
+            var msg = e.name === 'NotAllowedError' ? 'Microphone blocked. Allow mic in browser settings and refresh.' : (e.message || 'Microphone error. Try the text box below.');
+            showError(msg);
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtnText.textContent = 'Start Recording';
+        }
+    }
+
+    recordBtn.addEventListener('click', function () {
+        if (isRecording) stopRecording();
+        else startRecording();
+    });
+
+    function sendTextAsVoice(text) {
+        var t = (text || '').trim();
+        if (!t) return;
+        voiceTextInput.value = '';
+        recordBtn.disabled = true;
+        showError('');
+        setStatus('Thinking…');
+        var formData = new FormData();
+        formData.append('text', t);
+        fetch('{{ url_for("api_voice_process_text") }}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (res) { return res.json(); }).then(function (data) {
+            if (data.success) {
+                addUserBubble(data.user_text);
+                addAssistantBubbleWithAudio(data.assistant_text, data.audio_base64 || null);
+                if (data.audio_base64) {
+                    var lastAudio = voiceChatMessages.querySelector('.mb-3:last-child audio');
+                    if (lastAudio) lastAudio.play().catch(function(){});
+                }
+            } else {
+                showError(data.error || 'Something went wrong.');
+            }
+            setStatus('');
+            recordBtn.disabled = false;
+        }).catch(function (e) {
+            showError('Network error: ' + e.message);
+            setStatus('');
+            recordBtn.disabled = false;
+        });
+    }
+
+    function addAssistantBubbleWithAudio(text, audioBase64) {
+        voiceEmptyState.style.display = 'none';
+        var div = document.createElement('div');
+        div.className = 'mb-3 text-start';
+        var bubble = document.createElement('div');
+        bubble.className = 'd-inline-block p-3 rounded-3 text-start';
+        bubble.style.cssText = 'max-width: 90%; background: rgba(138, 43, 226, 0.15); border: 1px solid rgba(138, 43, 226, 0.5);';
+        bubble.innerHTML = '<div class="small text-secondary mb-1">Assistant</div><div class="text-white">' + escapeHtml(text) + '</div>';
+        if (audioBase64) {
+            var audio = document.createElement('audio');
+            audio.controls = true;
+            audio.className = 'mt-2 w-100';
+            audio.src = 'data:audio/mp3;base64,' + audioBase64;
+            bubble.appendChild(audio);
+        }
+        div.appendChild(bubble);
+        voiceChatMessages.appendChild(div);
+        scrollToBottom();
+    }
+
+    var voiceTextInput = document.getElementById('voiceTextInput');
+    var voiceTextSend = document.getElementById('voiceTextSend');
+    voiceTextSend.addEventListener('click', function () { sendTextAsVoice(voiceTextInput.value); });
+    voiceTextInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendTextAsVoice(voiceTextInput.value); });
+
+    clearVoiceChat.addEventListener('click', async function () {
+        try {
+            await fetch('{{ url_for("api_voice_clear") }}', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            voiceChatMessages.innerHTML = '';
+            voiceEmptyState.style.display = 'block';
+            showError('');
+            setStatus('Press the button and speak, then press again to send.');
+        } catch (e) {}
+    });
+})();
+</script>
+{% endblock %}
