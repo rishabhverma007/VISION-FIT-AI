@@ -170,7 +170,7 @@ flowchart TD
     end
 
     subgraph L4["Data Management Layer"]
-        FL["Flask routes<br/>40+ endpoints"]
+        FL["Flask routes<br/>40 endpoints"]
         AUTH["Flask-Login +<br/>server-side sessions"]
         DB[("SQLAlchemy DB<br/>SQLite dev / PostgreSQL prod")]
     end
@@ -407,6 +407,12 @@ sequenceDiagram
 
 The Testing and Validation module ensures that the entire system performs reliably under real-world conditions. The computer vision pipeline is evaluated under different lighting conditions, camera angles, body positions, and movement speeds to verify robustness. The exercise recognition model is also tested for prediction accuracy, response time, and consistency to ensure smooth real-time performance across various usage scenarios.
 
+Every endpoint above is additionally covered by an automated end-to-end smoke suite (`tests/smoke_test.py`, 42 checks: auth, pages, pose analysis, workout persistence, all three AI services, the voice pipeline, Google Fit graceful handling, and export/import/backup/restore round-trips). It runs against a throwaway database:
+
+```bash
+python tests/smoke_test.py   # ===== SMOKE TEST: 42 passed, 0 failed =====
+```
+
 ---
 
 ## 8. Expected Outcomes
@@ -507,7 +513,7 @@ VISION-FIT-AI/
 ├── run.py                  # WSGI entrypoint (gunicorn run:app)
 ├── start_app.py            # Local launcher (auto-starts Ollama + Flask)
 ├── run_visionfit.bat       # One-click Windows launcher
-├── routes.py               # 40+ routes: pages + JSON APIs
+├── routes.py               # 40 routes: pages + JSON APIs
 ├── models.py               # User (biometrics + BMI) & Workout models
 ├── extensions.py           # SQLAlchemy + LoginManager singletons
 ├── gemini.py               # Gemini engine with Ollama fallback
@@ -528,6 +534,7 @@ VISION-FIT-AI/
 │   └── favicon.ico, h1-h4.jpg
 ├── templates/              # 11 Jinja2 pages (base, dashboard, exercise_analysis,
 │                           #  workout_planner, diet, yoga, fitness_chat, voice_assistant …)
+├── tests/smoke_test.py     # 42-check end-to-end suite (auth, pose, AI, voice, portability)
 └── frontend/               # Optional JS tooling scaffold (package.json only)
 ```
 
@@ -535,14 +542,14 @@ Backend composition (lines of Python per module):
 
 ```mermaid
 pie showData title Python backend — lines of code by module
-    "routes.py" : 1001
-    "pose_detection.py" : 668
-    "yoga_service.py" : 636
+    "routes.py" : 1030
+    "pose_detection.py" : 717
+    "yoga_service.py" : 673
     "voice_service.py" : 294
     "gemini.py" : 249
-    "diet_service.py" : 172
+    "diet_service.py" : 206
     "google_fit_service.py" : 160
-    "app / models / infra" : 312
+    "app / models / infra" : 169
 ```
 
 **Technology stack (matching the synopsis tools & technologies table):**
@@ -646,7 +653,7 @@ Open **http://localhost:5000** 🎉
 | Auth | `/register`, `/login`, `/logout` | GET/POST | Account management |
 | Pages | `/dashboard`, `/exercise-analysis`, `/workout_planner`, `/diet`, `/yoga`, `/fitness_chat`, `/voice-assistant` | GET | Rendered pages (login required) |
 | Pose | `/api/analyze-pose` | POST | Landmarks → reps, form score, feedback |
-| Pose | `/api/pose-detection` · `/api/reset-pose-session` | POST | Alternate detector / reset counters |
+| Pose | `/api/pose-detection` · `/api/reset-pose-session` | POST | Server-side MediaPipe detection on uploaded image (OpenCV decode) / reset counters |
 | Workouts | `/api/save-workout` · `/api/workout-history` · `/api/dashboard-stats` | GET/POST | Persist & aggregate sessions |
 | AI | `/api/fitness-chat` · `/api/generate-diet-plan` · `/api/generate-yoga-plan` | POST | LLM-generated content |
 | Voice | `/api/voice/process` (streaming) · `/api/voice/process_legacy` · `/api/voice/process_text` · `/api/voice/clear` | POST | STT → chat → TTS pipeline |
