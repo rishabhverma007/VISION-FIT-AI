@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from typing import Dict, Any, List
 try:
     import ollama
@@ -74,6 +75,25 @@ def _normalize_pose_id(pose_id: str, db_keys: set) -> str:
         if key_compact == raw_compact:
             return key
     return ""
+
+
+def _loads_lenient(text: str) -> Dict[str, Any]:
+    """Parse model output as JSON, tolerating common LLM formatting faults:
+    markdown fences, trailing commas, and trailing prose after the JSON object."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    cleaned = re.sub(r',\s*([}\]])', r'\1', text)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+    start = cleaned.find('{')
+    if start != -1:
+        obj, _ = json.JSONDecoder().raw_decode(cleaned[start:])
+        return obj
+    raise ValueError("Model output contained no JSON object")
 
 
 def _match_pose_by_name(pose_name: str, db: Dict[str, Any]) -> str:
@@ -514,21 +534,38 @@ class YogaService:
         Return ONLY valid JSON, no markdown.
         """
 
-        try:
+        def _request() -> str:
             response = ollama.chat(model=self.model_name, messages=[
                 {'role': 'system', 'content': 'You are a helpful yoga assistant that outputs only JSON.'},
                 {'role': 'user', 'content': prompt},
             ])
-            
-            content = response['message']['content']
-            
+            return response['message']['content']
+
+        try:
+            content = _request()
+
             # Basic cleanup to ensure JSON parsing if model adds markdown blocks
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-                
-            plan = json.loads(content)
+
+            try:
+                plan = _loads_lenient(content)
+            except (ValueError, json.JSONDecodeError):
+                logger.warning("Yoga plan JSON parse failed; retrying once with a stricter reminder.")
+                retry = ollama.chat(model=self.model_name, messages=[
+                    {'role': 'system', 'content': 'You are a helpful yoga assistant that outputs only JSON.'},
+                    {'role': 'user', 'content': prompt},
+                    {'role': 'assistant', 'content': content},
+                    {'role': 'user', 'content': 'Your previous reply was not valid JSON. Reply again with ONLY the corrected valid JSON object, no markdown, no commentary.'},
+                ])
+                content = retry['message']['content']
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0]
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0]
+                plan = _loads_lenient(content)
             db_keys = set(self.db.keys())
 
             # Enrich every pose with the CORRECT image for that specific yoga (id + name fallback)

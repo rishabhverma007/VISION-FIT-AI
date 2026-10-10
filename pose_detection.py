@@ -666,3 +666,52 @@ class PoseAnalyzer:
                 "feedback": ["Analysis error occurred"],
                 "success": False
             }
+
+
+class PoseDetector:
+    """
+    Server-side image pose detection: decodes a frame with OpenCV and extracts
+    33 MediaPipe landmarks. Used by the /api/pose-detection upload endpoint.
+    """
+
+    def __init__(self):
+        self.pose = None
+        try:
+            import mediapipe as mp
+            self.pose = mp.solutions.pose.Pose(
+                static_image_mode=True,
+                model_complexity=1,
+                min_detection_confidence=0.5,
+            )
+        except ImportError:
+            logger.warning("mediapipe is not installed; PoseDetector is unavailable")
+
+    def process_image(self, img) -> Dict[str, Any]:
+        """
+        Run pose detection on a single BGR image (cv2.imdecode output).
+
+        Returns:
+            {'success': True, 'landmarks': [ {x, y, z, visibility} x33 ]}
+            or {'success': False, 'message': '...'}
+        """
+        try:
+            if img is None:
+                return {'success': False, 'message': 'Could not decode image data'}
+            if self.pose is None:
+                return {'success': False, 'message': 'MediaPipe Pose is not available on the server'}
+
+            import cv2
+            rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            results = self.pose.process(rgb)
+
+            if not results.pose_landmarks:
+                return {'success': False, 'message': 'No pose detected in image'}
+
+            landmarks = [
+                {'x': lm.x, 'y': lm.y, 'z': lm.z, 'visibility': lm.visibility}
+                for lm in results.pose_landmarks.landmark
+            ]
+            return {'success': True, 'landmarks': landmarks}
+        except Exception as e:
+            logger.error(f"PoseDetector processing failed: {e}")
+            return {'success': False, 'message': str(e)}

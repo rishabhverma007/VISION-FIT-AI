@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from typing import Dict, Any, List
 try:
     import ollama
@@ -11,6 +12,24 @@ except ImportError:
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _loads_lenient(text: str) -> Dict[str, Any]:
+    """Parse model output as JSON, tolerating trailing commas and trailing prose."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    cleaned = re.sub(r',\s*([}\]])', r'\1', text)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+    start = cleaned.find('{')
+    if start != -1:
+        obj, _ = json.JSONDecoder().raw_decode(cleaned[start:])
+        return obj
+    raise ValueError("Model output contained no JSON object")
 
 class DietService:
     def __init__(self, default_model="llama3.2"):
@@ -138,16 +157,31 @@ class DietService:
                 {'role': 'system', 'content': 'You are a nutritionist assistant that outputs only JSON.'},
                 {'role': 'user', 'content': prompt},
             ])
-            
+
             content = response['message']['content']
-            
+
             # JSON Cleanup
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-                
-            plan = json.loads(content)
+
+            try:
+                plan = _loads_lenient(content)
+            except (ValueError, json.JSONDecodeError):
+                logger.warning("Diet plan JSON parse failed; retrying once with a stricter reminder.")
+                retry = ollama.chat(model=self.model_name, messages=[
+                    {'role': 'system', 'content': 'You are a nutritionist assistant that outputs only JSON.'},
+                    {'role': 'user', 'content': prompt},
+                    {'role': 'assistant', 'content': content},
+                    {'role': 'user', 'content': 'Your previous reply was not valid JSON. Reply again with ONLY the corrected valid JSON object, no markdown, no commentary.'},
+                ])
+                content = retry['message']['content']
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0]
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0]
+                plan = _loads_lenient(content)
             return {"success": True, "plan": plan}
 
         except Exception as e:

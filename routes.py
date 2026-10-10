@@ -22,7 +22,7 @@ except ImportError:
 from extensions import db
 from models import User, Workout
 import gemini
-from pose_detection import PoseAnalyzer
+from pose_detection import PoseAnalyzer, PoseDetector
 from yoga_service import YogaService
 from diet_service import DietService
 from google_fit_service import GoogleFitService
@@ -39,6 +39,62 @@ app = None
 
 # Initialize pose analyzer
 pose_analyzer = PoseAnalyzer()
+
+
+def _workout_export_dict(workout):
+    """Serialize a Workout into a plain dict matching the live model schema."""
+    return {
+        'name': workout.name,
+        'exercise_type': workout.exercise_type,
+        'duration_minutes': workout.duration_minutes,
+        'calories_burned': workout.calories_burned,
+        'reps_completed': workout.reps_completed,
+        'valid_reps': workout.valid_reps,
+        'form_score': workout.form_score,
+        'movement_consistency': workout.movement_consistency,
+        'feedback_summary': workout.feedback_summary or '',
+        'notes': workout.notes or '',
+        'completed_at': workout.completed_at.strftime('%Y-%m-%d %H:%M:%S') if workout.completed_at else ''
+    }
+
+
+def _workout_from_dict(user_id, workout_data):
+    """Build a Workout model from an exported/imported dict with safe coercion."""
+    def _to_int(value, default=0):
+        try:
+            return int(float(value))
+        except (TypeError, ValueError):
+            return default
+
+    def _to_float(value, default=0.0):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    completed_at = datetime.utcnow()
+    raw_completed = workout_data.get('completed_at')
+    if raw_completed:
+        try:
+            completed_at = datetime.strptime(str(raw_completed), '%Y-%m-%d %H:%M:%S')
+        except (TypeError, ValueError):
+            pass
+
+    return Workout(
+        user_id=user_id,
+        name=workout_data.get('name') or 'Imported Workout',
+        exercise_type=workout_data.get('exercise_type') or 'general',
+        duration_minutes=_to_int(workout_data.get('duration_minutes')),
+        calories_burned=_to_int(workout_data.get('calories_burned')),
+        reps_completed=_to_int(workout_data.get('reps_completed')),
+        valid_reps=_to_int(workout_data.get('valid_reps')),
+        form_score=_to_float(workout_data.get('form_score')),
+        movement_consistency=_to_float(workout_data.get('movement_consistency')),
+        feedback_summary=workout_data.get('feedback_summary') or '',
+        notes=workout_data.get('notes') or '',
+        completed_at=completed_at
+    )
+
 
 def set_app(flask_app):
     """Set the Flask app instance for route registration"""
@@ -517,62 +573,50 @@ def register_routes(flask_app):
             # Get user's data
             workouts = Workout.query.filter_by(user_id=current_user.id).all()
 
-
             # Prepare export data
             export_data = {
                 'user_info': {
                     'username': current_user.username,
                     'email': current_user.email,
                     'fitness_level': current_user.fitness_level,
-                    'fitness_goals': current_user.fitness_goals
+                    'fitness_goals': current_user.fitness_goals,
+                    'age': current_user.age,
+                    'gender': current_user.gender,
+                    'height': current_user.height,
+                    'weight': current_user.weight,
+                    'physical_limitations': current_user.physical_limitations
                 },
-                'workouts': []
+                'workouts': [_workout_export_dict(w) for w in workouts]
             }
-
-            for workout in workouts:
-                export_data['workouts'].append({
-                    'name': workout.name,
-                    'duration': workout.duration,
-                    'calories_burned': workout.calories_burned,
-                    'completed_at': workout.completed_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'difficulty': workout.difficulty
-                })
-
-
 
             return jsonify({'success': True, 'data': export_data})
 
         except Exception as e:
             logging.error(f"Error exporting data: {e}")
-            return jsonify({'success': False, 'error': str(e)})
+            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/import-data', methods=['POST'])
     @login_required
     def import_data():
         try:
-            data = request.get_json()
+            payload = request.get_json(silent=True) or {}
+            # Accept either the raw export object or the full export response envelope
+            data = payload.get('data') if isinstance(payload.get('data'), dict) else payload
 
-            # Import workouts
+            imported = 0
             for workout_data in data.get('workouts', []):
-                workout = Workout(
-                    user_id=current_user.id,
-                    name=workout_data.get('name', 'Imported Workout'),
-                    duration=workout_data.get('duration', 0),
-                    calories_burned=workout_data.get('calories_burned', 0),
-                    difficulty=workout_data.get('difficulty', 'medium')
-                )
+                workout = _workout_from_dict(current_user.id, workout_data)
                 db.session.add(workout)
-
-
+                imported += 1
 
             db.session.commit()
 
-            return jsonify({'success': True, 'message': 'Data imported successfully!'})
+            return jsonify({'success': True, 'message': f'{imported} workouts imported successfully!'})
 
         except Exception as e:
             db.session.rollback()
             logging.error(f"Error importing data: {e}")
-            return jsonify({'success': False, 'error': str(e)})
+            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/backup-data')
     @login_required
@@ -581,62 +625,44 @@ def register_routes(flask_app):
             # Get user's data
             workouts = Workout.query.filter_by(user_id=current_user.id).all()
 
-
             # Create backup data
             backup_data = {
                 'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                 'user_id': current_user.id,
-                'workouts': []
+                'workouts': [_workout_export_dict(w) for w in workouts]
             }
-
-            for workout in workouts:
-                backup_data['workouts'].append({
-                    'name': workout.name,
-                    'duration': workout.duration,
-                    'calories_burned': workout.calories_burned,
-                    'completed_at': workout.completed_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'difficulty': workout.difficulty
-                })
-
-
 
             return jsonify({'success': True, 'data': backup_data})
 
         except Exception as e:
             logging.error(f"Error creating backup: {e}")
-            return jsonify({'success': False, 'error': str(e)})
+            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/restore-data', methods=['POST'])
     @login_required
     def restore_data():
         try:
-            data = request.get_json()
+            payload = request.get_json(silent=True) or {}
+            # Accept either the raw backup object or the full backup response envelope
+            data = payload.get('data') if isinstance(payload.get('data'), dict) else payload
 
             # Clear existing data
             Workout.query.filter_by(user_id=current_user.id).delete()
 
-
-            # Restore workouts
+            restored = 0
             for workout_data in data.get('workouts', []):
-                workout = Workout(
-                    user_id=current_user.id,
-                    name=workout_data.get('name', 'Restored Workout'),
-                    duration=workout_data.get('duration', 0),
-                    calories_burned=workout_data.get('calories_burned', 0),
-                    difficulty=workout_data.get('difficulty', 'medium')
-                )
+                workout = _workout_from_dict(current_user.id, workout_data)
                 db.session.add(workout)
-
-
+                restored += 1
 
             db.session.commit()
 
-            return jsonify({'success': True, 'message': 'Data restored successfully!'})
+            return jsonify({'success': True, 'message': f'{restored} workouts restored successfully!'})
 
         except Exception as e:
             db.session.rollback()
             logging.error(f"Error restoring data: {e}")
-            return jsonify({'success': False, 'error': str(e)})
+            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/clear-data', methods=['POST'])
     @login_required
@@ -669,7 +695,10 @@ def register_routes(flask_app):
         try:
             # Get image data from request
             if 'image' not in request.files and 'image_data' not in request.form:
-                return jsonify({'success': False, 'error': 'No image provided'})
+                return jsonify({'success': False, 'error': 'No image provided'}), 400
+
+            if not CV2_AVAILABLE:
+                return jsonify({'success': False, 'error': 'OpenCV is not available on the server'}), 500
 
             # Process image data
             if 'image' in request.files:
@@ -700,11 +729,11 @@ def register_routes(flask_app):
                 return jsonify({
                     'success': False,
                     'error': result.get('message', 'Failed to detect pose')
-                })
+                }), 422
 
         except Exception as e:
             logging.error(f"Error in pose detection API: {e}")
-            return jsonify({'success': False, 'error': str(e)})
+            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/docs')
     def api_docs():

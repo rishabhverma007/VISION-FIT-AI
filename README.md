@@ -58,7 +58,7 @@ The project follows a **hybrid AI architecture**. Cloud-based intelligence throu
 | 🍎 **AI Diet Planner** | Ollama (`llama3.2`, auto-detects models) | 1-day meal plans with macros (protein / carbs / fats / calories), respects preferences & allergies |
 | 🧘 **AI Yoga Instructor** | Ollama | Custom yoga flows by mood, goal & duration — includes Chair/Bed yoga for limited mobility, with 26 pose illustrations |
 | 💬 **AI Fitness Chat** | Gemini 2.0 Flash → Ollama fallback | Context-aware Q&A assistant that knows your profile |
-| 🎙️ **Bilingual Voice Assistant** | Sarvam AI (`saaras:v3` STT · `sarvam-m` chat · `bulbul:v3` TTS) | Hands-free Hindi / English / Hinglish conversation, streaming responses |
+| 🎙️ **Bilingual Voice Assistant** | Sarvam AI (`saaras:v3` STT · `sarvam-105b-conversations` chat · `bulbul:v3` TTS) | Hands-free Hindi / English / Hinglish conversation, streaming responses |
 | 📊 **Dashboard & Google Fit** | Chart.js + Google Fit API | Workout stats, calories, streaks, progress charts, and OAuth2-based Google Fit sync |
 
 ---
@@ -318,7 +318,7 @@ sequenceDiagram
     W-->>U: display plan
 ```
 
-The same engine powers the **bilingual voice assistant** — Sarvam AI speech-to-text (`saaras:v3`), chat (`sarvam-m`), and text-to-speech (`bulbul:v3`) with streaming NDJSON responses:
+The same engine powers the **bilingual voice assistant** — Sarvam AI speech-to-text (`saaras:v3`), chat (`sarvam-105b-conversations`), and text-to-speech (`bulbul:v3`) with streaming NDJSON responses:
 
 ```mermaid
 sequenceDiagram
@@ -332,7 +332,7 @@ sequenceDiagram
     W->>F: audio blob
     F->>SV: Speech-to-Text (saaras:v3)
     SV-->>F: transcript + detected language
-    F->>SV: Chat completion (sarvam-m)
+    F->>SV: Chat completion (sarvam-105b-conversations)
     SV-->>F: reply text (TTS-optimized, no markdown)
     F-->>W: stream tokens (NDJSON, word by word)
     F->>SV: Text-to-Speech (bulbul:v3)
@@ -558,7 +558,7 @@ pie showData title Python backend — lines of code by module
 | Pose ML | scikit-learn RandomForestClassifier |
 | Cloud AI | Google Gemini 2.0 Flash |
 | Local AI | Ollama — Llama 3.2, Qwen 2.5, Mistral |
-| Voice AI | Sarvam AI (`saaras:v3`, `sarvam-m`, `bulbul:v3`) |
+| Voice AI | Sarvam AI (`saaras:v3`, `sarvam-105b-conversations`, `bulbul:v3`) |
 | Authentication | Flask-Login, Google OAuth 2.0 (Google Fit sync) |
 | Charts | Chart.js |
 | Deployment | Gunicorn, Procfile, Railway / Render / Heroku |
