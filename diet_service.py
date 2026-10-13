@@ -9,6 +9,8 @@ except ImportError:
     OLLAMA_AVAILABLE = False
     logging.warning("Ollama library not installed. Diet plans will use mock data.")
 
+from ollama_utils import list_models, pick_chat_model
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,61 +43,24 @@ class DietService:
         if not OLLAMA_AVAILABLE:
             return
 
-        try:
-            models_info = ollama.list()
-            available_models = []
-            
-             # Handle object-based response (newer ollama client)
-            if hasattr(models_info, 'models'):
-                # It's a Pydantic model or similar object
-                for m in models_info.models:
-                    # Try attribute access first, then dict access
-                    name = getattr(m, 'model', None) or getattr(m, 'name', None)
-                    if not name and isinstance(m, dict):
-                        name = m.get('model') or m.get('name')
-                    # Fallback to string representation if needed
-                    if name:
-                        available_models.append(name)
-                    else:
-                        available_models.append(str(m))
-            
-            # Handle dict-based response (older clients or raw API)
-            elif isinstance(models_info, dict) and 'models' in models_info:
-                 for m in models_info['models']:
-                    if isinstance(m, dict):
-                        name = m.get('model') or m.get('name')
-                    else:
-                        name = getattr(m, 'model', None) or getattr(m, 'name', None)
-                    
-                    if name:
-                        available_models.append(name)
-                    else:
-                        available_models.append(str(m))
-            else:
-                # Fallback for unexpected structures
-                available_models = [str(m) for m in models_info]
+        available_models = list_models()
+        if not available_models:
+            return
 
+        logger.info(f"DietService found available Ollama models: {available_models}")
 
-            logger.info(f"DietService found available Ollama models: {available_models}")
+        if self.model_name in available_models or f"{self.model_name}:latest" in available_models:
+            return
 
-            if self.model_name not in available_models and f"{self.model_name}:latest" not in available_models:
-                # Try to find a suitable fallback
-                preferred = ['llama3.2', 'qwen2.5', 'mistral', 'llama3', 'gemma', 'tinyllama']
-                found = False
-                for p in preferred:
-                    for av in available_models:
-                        if p in av:
-                            self.model_name = av
-                            logger.info(f"DietService switched to available model: {self.model_name}")
-                            found = True
-                            break
-                    if found: break
-                
-                if not found and available_models:
-                    self.model_name = available_models[0]
-
-        except Exception as e:
-            logger.warning(f"DietService failed to list Ollama models: {e}")
+        picked = pick_chat_model(available_models)
+        if picked:
+            self.model_name = picked
+            logger.info(f"DietService switched to available model: {self.model_name}")
+        else:
+            logger.warning(
+                f"None of the installed Ollama models ({available_models}) can run chat; "
+                f"keeping '{self.model_name}' and relying on the fallback plan."
+            )
 
     def check_ollama_status(self) -> bool:
         if not OLLAMA_AVAILABLE: return False

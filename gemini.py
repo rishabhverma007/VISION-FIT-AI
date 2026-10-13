@@ -15,6 +15,8 @@ except ImportError:
 
 from pydantic import BaseModel
 
+from ollama_utils import list_models, pick_chat_model
+
 class WorkoutPlan(BaseModel):
     plan_name: str
     duration_weeks: int
@@ -51,25 +53,11 @@ def _query_local_ollama(prompt: str, system_prompt: str = "") -> str:
     """Fallback to local Ollama (Llama 3.2, Qwen 2.5, Mistral) if Gemini is unconfigured or fails (Module 4)"""
     try:
         import ollama
-        models_info = ollama.list()
-        available = []
-        if hasattr(models_info, 'models'):
-            for m in models_info.models:
-                name = getattr(m, 'model', None) or getattr(m, 'name', None)
-                if name:
-                    available.append(name)
-        elif isinstance(models_info, dict) and 'models' in models_info:
-            for m in models_info['models']:
-                name = m.get('model') or m.get('name') if isinstance(m, dict) else str(m)
-                if name:
-                    available.append(name)
-
-        preferred = ['llama3.2', 'llama3.2:latest', 'qwen2.5', 'mistral', 'llama3']
-        chosen = 'llama3.2'
-        for p in preferred:
-            if any(p in str(a) for a in available):
-                chosen = p
-                break
+        available = list_models()
+        chosen = pick_chat_model(available)
+        if not chosen:
+            logging.warning("No chat-capable Ollama model installed; skipping local fallback.")
+            return ""
 
         messages = []
         if system_prompt:
