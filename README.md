@@ -9,7 +9,7 @@
 
 > **B.Tech (CSE — Artificial Intelligence) major project**
 > School of Engineering, Babu Banarasi Das University, Lucknow · August 2026
-> **Team:** Rishabh Verma · Nootan Tiwari · Riya Singh · Pritam Dey — **Supervisor:** Ms. Mala Chaturvedi, Assistant Professor
+> **Team:** Rishabh Verma · Pritam Dey
 
 **VisionFit AI** is an intelligent virtual fitness coach that combines **Computer Vision**, **Machine Learning**, and **Generative AI** into a single unified platform. It continuously analyzes user movements through a webcam, identifies the performed exercise using a trained machine learning model, evaluates exercise form in real time, and provides corrective feedback instantly — while cloud and locally-hosted AI generate personalized workout, diet, and yoga plans.
 
